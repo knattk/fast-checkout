@@ -171,12 +171,12 @@ class Product_Card_Widget extends Widget_Base {
             if ( ! $product_id ) continue;
 
             // 🚀 Implement Caching
-            // $is_cached = 'hit';
+      
             $cache_key = 'fast_checkout_product_' . $keysubstr . '_' . $product_id;
             $body = get_transient( $cache_key );
 
             if ( false === $body ) {
-                // $is_cached = 'get';
+           
                 $api_url = "{$store_url}/wp-json/wc/v3/products/{$product_id}";
                 $response = wp_remote_get( $api_url, [
                     'headers' => [
@@ -200,12 +200,12 @@ class Product_Card_Widget extends Widget_Base {
                 <div class="fast-product-card" data-product_id="<?php echo esc_attr( $product_id ); ?>">
 
                     <div class="product-image">
-                        <!--cache_check = <?php echo esc_html( $is_cached ); ?>-->
                         <img src="<?php echo $image_url; ?>" alt="<?php echo esc_attr( $body['name'] ); ?>">
+                        <span class="product-progress-bar">
+                         <span class="progress" value="0" style="width:0%"><span class="progress-text"></span><img src="<?php echo (plugin_dir_url( __DIR__ ).'asssets/image/fire.png') ?>" alt=""></span>
+                         </span>
                     </div>
-
                     <div class="product-details">
-                        
                         <h3><?php echo !empty($item['product_short_name']) ? $item['product_short_name'] : esc_html($body['name']); ?></h3>
                         <p class="product-price"><?php echo wp_kses_post( $body['price_html'] ?? '$' . $body['price'] ); ?></p>
                         <span class="product-like"><?php echo esc_html( $product_like ); ?> คนสนใจ</span>

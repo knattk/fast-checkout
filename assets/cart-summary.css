@@ -1,20 +1,31 @@
+.fast-checkout-cart-container {
+    display: none;
+    height: 0;
+    transition: all 0.5s ease;
+}
+.fast-checkout-cart-container.active {
+    display: block;
+    opacity: 1;
+    height: auto;
+
+}
 #fast-checkout-cart-items {
     overflow: hidden;
     min-height: 225px;
 }
 #fast-checkout-cart-items.loading:after {
     content: " ";
-    width: 100%;
+    width: 20%;
     height: 100%;
     position: absolute;
     top: 0;
     left: 0;
-    background: linear-gradient(90deg,rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 30%, rgba(255, 255, 255, 0) 60%);
+    background: linear-gradient(90deg,rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0) 100%);
     animation: shimmer 2.5s infinite;
 }
 @keyframes shimmer {
     100% {
-      transform: translateX(100%);
+      transform: translateX(600%);
     }
 }
 .fast-cart-item {

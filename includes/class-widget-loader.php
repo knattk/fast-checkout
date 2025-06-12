@@ -30,12 +30,12 @@ class Widget_Loader {
 	}
 
 	public function widget_styles() {
-		wp_register_style('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/card.css',[],FAST_CHECKOUT_VERSION);
+		wp_register_style('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/product-card.css',[],FAST_CHECKOUT_VERSION);
 		wp_register_style('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/cart-summary.css',[],FAST_CHECKOUT_VERSION);
 	}
 
 	public function widget_scripts() {
-		wp_register_script('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/card.js',[],FAST_CHECKOUT_VERSION,true
+		wp_register_script('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/product-card.js',[],FAST_CHECKOUT_VERSION,true
 		);
 		wp_register_script('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/cart-summary.js',[],FAST_CHECKOUT_VERSION,true
 		);
