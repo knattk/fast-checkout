@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('cart-summary');
     const CART_KEY = 'fast-checkout-cart';
     const CART_SUMMARY_ID = 'fast-checkout-cart-items';
+    let isFormInit = null;
 
     function loadCart() {
         try {
@@ -75,10 +76,24 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             container.classList.remove('loading');
         }, 1000);
+
+        // Form init
+
+        if (!isFormInit) {
+            isFormInit = true;
+
+            const productIdField = document.getElementById(
+                'form-field-product_id'
+            );
+            if (productIdField && product && product.id)
+                productIdField.value = product.id;
+        }
     }
 
     // Initial render
-    renderCartSummary();
+    setTimeout(() => {
+        renderCartSummary();
+    }, 500);
 
     // Optional: re-render on sessionStorage changes if needed
     window.addEventListener('storage', function (event) {
