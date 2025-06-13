@@ -6,7 +6,22 @@ use WP_REST_Response;
 
 function handle_webhook(WP_REST_Request $request) {
     $content_type = $request->get_content_type();
+    
+    $allowed_ips = get_option('fast_checkout_allowed_ips');
 
+    if (!empty($allowed_ips)) {
+        $allowed_ips_array = array_map('trim', explode(',', $allowed_ips));
+
+        $remote_ip = $request->get_header('cf-connecting-ip');
+        if (empty($remote_ip)) {
+            $remote_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        }
+        
+        if (!in_array($remote_ip, $allowed_ips_array)) {
+            return new WP_Error('forbidden', 'Silence forbidden.', ['status' => 403]);
+        }
+    }
+    
     if ($content_type && strpos($content_type['value'], 'application/json') !== false) {
         $data = $request->get_json_params();
     } elseif ($content_type && strpos($content_type['value'], 'application/x-www-form-urlencoded') !== false) {

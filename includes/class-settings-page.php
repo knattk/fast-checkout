@@ -35,6 +35,10 @@ class Settings_Page {
         register_setting('fast_checkout_settings', 'fast_checkout_consumer_secret', [
             'sanitize_callback' => [$this, 'encrypt_consumer_secret']
         ]);
+        
+        register_setting('fast_checkout_settings', 'fast_checkout_allowed_ips', [
+            'sanitize_callback' => [$this, 'sanitize_ip_list']
+        ]);
 
         add_settings_section(
             'fast_checkout_section',
@@ -66,6 +70,14 @@ class Settings_Page {
             'fast_checkout_settings',
             'fast_checkout_section'
         );
+        
+        add_settings_field(
+            'fast_checkout_allowed_ips',
+            'Allowed IPs (comma separated)',
+            [$this, 'allowed_ips_field_html'],
+            'fast_checkout_settings',
+            'fast_checkout_section'
+        );
 
     }
 
@@ -86,7 +98,19 @@ class Settings_Page {
         echo "<input type='password' name='fast_checkout_consumer_secret' value='{$decrypted}' size='50' autocomplete='off' />";
     }
 
+    public function allowed_ips_field_html() {
+        $value = esc_attr(get_option('fast_checkout_allowed_ips'));
+        echo "<input type='text' name='fast_checkout_allowed_ips' value='{$value}' size='50' placeholder='192.168.1.1, 10.0.0.1' />";
+    }
 
+    public function sanitize_ip_list($value) {
+        $ips = array_map('trim', explode(',', $value));
+        $valid_ips = array_filter($ips, function($ip) {
+            return filter_var($ip, FILTER_VALIDATE_IP);
+        });
+        return implode(', ', $valid_ips);
+    }
+    
     private function maybe_decrypt($encrypted) {
         $decrypted = '';
         if (!empty($encrypted)) {
