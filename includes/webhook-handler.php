@@ -4,12 +4,17 @@ namespace FastCheckout;
 use WP_REST_Request;
 use WP_REST_Response;
 
+if ( ! function_exists( 'FastCheckout\\get_state_code' ) ) {
+    require_once plugin_dir_path( __FILE__ ) . '/woocommerce-state-code.php';
+}
+
 function handle_webhook(WP_REST_Request $request) {
     $content_type = $request->get_content_type();
     
     $allowed_ips = get_option('fast_checkout_allowed_ips');
 
     if (!empty($allowed_ips)) {
+        error_log(print($allowed_ips));
         $allowed_ips_array = array_map('trim', explode(',', $allowed_ips));
 
         $remote_ip = $request->get_header('cf-connecting-ip');
@@ -49,6 +54,7 @@ function handle_webhook(WP_REST_Request $request) {
         $first_name = $full_name;
         $last_name = '';
     }
+    $state_code = get_state_code($f('billing_state'));
 
     $order = [
         'payment_method' => $f('payment') ?: 'cod',
@@ -61,7 +67,7 @@ function handle_webhook(WP_REST_Request $request) {
             'address_1' => $f('billing_address_1'),
             'address_2' => $f('billing_address_2'),
             'city' => $f('billing_city'),
-            'state' => $f('billing_state'),
+            'state' => $state_code,
             'postcode' => $f('billing_postcode'),
             'country' => 'TH',
             'email' => $f('billing_email'),
@@ -73,7 +79,7 @@ function handle_webhook(WP_REST_Request $request) {
             'address_1' => $f('billing_address_1'),
             'address_2' => $f('billing_address_2'),
             'city' => $f('billing_city'),
-            'state' => $f('billing_state'),
+            'state' => $state_code,
             'postcode' => $f('billing_postcode'),
             'country' => 'TH',
         ],
@@ -101,13 +107,23 @@ function handle_webhook(WP_REST_Request $request) {
             'Content-Type' => 'application/json',
         ],
         'body' => json_encode($order),
-        'timeout' => 15,
+        'timeout' => 60,
     ]);
+
 
     if (is_wp_error($response)) {
         return new WP_REST_Response(['error' => $response->get_error_message()], 500);
     }
 
+
     $body = wp_remote_retrieve_body($response);
+    
+    
+     file_put_contents(WP_CONTENT_DIR . '/webhook.log', json_encode([
+        'response' => $body,
+        'json_decode' => json_decode($body, true),
+    ], JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
+    
     return new WP_REST_Response(json_decode($body, true), 200);
+    
 }
