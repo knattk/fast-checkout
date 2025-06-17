@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('cart-summary');
     const CART_KEY = 'fast-checkout-cart';
     const CART_SUMMARY_ID = 'fast-checkout-cart-items';
 

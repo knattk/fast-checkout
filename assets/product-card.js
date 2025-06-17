@@ -13,19 +13,34 @@ document.addEventListener('DOMContentLoaded', function () {
         const regularPrice = extractNumber(
             card
                 .querySelector('del .woocommerce-Price-amount')
-                ?.textContent.trim()
+                ?.textContent.trim() ?? null
         );
         const salePrice = extractNumber(
             card
                 .querySelector('ins .woocommerce-Price-amount')
-                ?.textContent.trim()
+                ?.textContent.trim() ?? null
         );
+        let singlePrice;
+
+        if (null == regularPrice) {
+            singlePrice = extractNumber(
+                card
+                    .querySelector('.product-price .woocommerce-Price-amount')
+                    ?.textContent.trim() ?? null
+            );
+        }
 
         return {
             id,
             title,
             image,
-            price: { regular: regularPrice, sale: salePrice },
+            price: {
+                regular: isNaN(regularPrice) ? regularPrice : singlePrice,
+                sale:
+                    isNaN(salePrice) && isNaN(regularPrice)
+                        ? salePrice
+                        : singlePrice,
+            },
         };
     };
 
