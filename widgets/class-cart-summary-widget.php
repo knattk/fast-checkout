@@ -15,7 +15,7 @@ class Cart_Summary_Widget extends Widget_Base {
     }
 
     public function get_title() {
-        return 'Cart Summary';
+        return 'Fast Cart Summary';
     }
 
     public function get_icon() {

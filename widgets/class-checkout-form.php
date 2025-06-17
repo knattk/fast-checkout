@@ -11,7 +11,7 @@ class Checkout_Form_Widget extends Widget_Base {
     }
 
     public function get_title() {
-        return __('Custom Form', 'plugin-name');
+        return __('Fast Checkout Form', 'fast-checkout');
     }
 
     public function get_icon() {
@@ -26,23 +26,23 @@ class Checkout_Form_Widget extends Widget_Base {
         $this->start_controls_section(
             'form_section',
             [
-                'label' => __('Form Fields', 'plugin-name'),
+                'label' => __('Form Fields', 'fast-checkout'),
                 'tab' => Controls_Manager::TAB_CONTENT,
             ]
         );
 
         $this->add_control('product_id', [
-            'label' => __('Product ID', 'plugin-name'),
+            'label' => __('Product ID', 'fast-checkout'),
             'type' => Controls_Manager::NUMBER,
             'default' => 1,
         ]);
 
         $this->add_control('payment', [
-            'label' => __('Payment Method', 'plugin-name'),
+            'label' => __('Payment Method', 'fast-checkout'),
             'type' => Controls_Manager::SELECT,
             'options' => [
-                'cod' => __('Cash on Delivery', 'plugin-name'),
-                'bacs' => __('Bank Transfer', 'plugin-name'),
+                'cod' => __('Cash on Delivery', 'fast-checkout'),
+                'bacs' => __('Bank Transfer', 'fast-checkout'),
             ],
             'default' => 'cod',
         ]);

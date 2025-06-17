@@ -26,7 +26,7 @@ class Product_Card_Widget extends Widget_Base {
     }
 
     public function get_title() {
-        return esc_html__( 'Product Card (Repeater)', 'fast-checkout' );
+        return esc_html__( 'Fast Product Card', 'fast-checkout' );
     }
 
     public function get_icon() {
@@ -165,7 +165,7 @@ class Product_Card_Widget extends Widget_Base {
         foreach ( $settings['products'] as $item ) {
             $product_id = absint( $item['product_id'] ?? 0 );
             $image_url  = esc_url( $item['product_image']['url'] ?? '' );
-            $custom_shop_url = esc_url( $item['product_custom_shop_url']['url'] ?? 'https://www.google.com' );
+            $custom_shop_url = esc_url( $item['product_custom_shop_url']['url'] ?? '#' );
             $product_like = $this->formatNumberShort($item['product_like']);
 
             if ( ! $product_id ) continue;

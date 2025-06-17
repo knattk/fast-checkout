@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const cart = loadCart();
         for (const fieldId in cart) {
             const input = form.querySelector(
-                `input[name="form_fields[${fieldId}]"]`
+                `input[name="form_fields[product_id]"]`
             );
             if (input) input.value = cart[fieldId].id;
         }
