@@ -12,12 +12,14 @@ function handle_webhook(WP_REST_Request $request) {
     $content_type = $request->get_content_type();
     
     $allowed_ips = get_option('fast_checkout_allowed_ips');
+    
+    $site_url = $_SERVER['HTTP_HOST'];
 
     if (!empty($allowed_ips)) {
-        error_log(print($allowed_ips));
+        
         $allowed_ips_array = array_map('trim', explode(',', $allowed_ips));
-
         $remote_ip = $request->get_header('cf-connecting-ip');
+        
         if (empty($remote_ip)) {
             $remote_ip = $_SERVER['REMOTE_ADDR'] ?? '';
         }
@@ -47,6 +49,7 @@ function handle_webhook(WP_REST_Request $request) {
 
     $full_name = trim($f('billing_full_name'));
     $space_pos = strpos($full_name, ' ');
+    
     if ($space_pos !== false) {
         $first_name = substr($full_name, 0, $space_pos);
         $last_name = substr($full_name, $space_pos + 1);
@@ -54,13 +57,15 @@ function handle_webhook(WP_REST_Request $request) {
         $first_name = $full_name;
         $last_name = '';
     }
+    
     $state_code = get_state_code($f('billing_state'));
 
     $order = [
         'payment_method' => $f('payment') ?: 'cod',
         'set_paid' => ($f('payment') == 'bacs' ? false : true),
-        'customer_note' => 'ทดสอบระบบไม่ต้องเก็บออเดอร์นี้ - Fast checkout landing',
-        'status' => ($f('payment') == 'bacs' ? 'on-hold' : 'processing'),
+        'customer_note' => 'สั่งซื้อผ่านเว็บไซต์ ' . $site_url?:'n/a',
+        'status' => 'cancelled',
+        // 'status' => ($f('payment') == 'bacs' ? 'on-hold' : 'processing'),
         'billing' => [
             'first_name' => $first_name,
             'last_name' => $last_name,
@@ -84,7 +89,10 @@ function handle_webhook(WP_REST_Request $request) {
             'country' => 'TH',
         ],
         'meta_data' => [
-            ['key' => '_wc_order_attribution', 'value' => 'fast_checkout']
+            ['key' => '_wc_order_attribution_source_type', 'value' => 'referral'],
+            ['key' => '_wc_order_attribution_utm_source', 'value' => $site_url?:'n/a'],
+            ['key' => '_wc_order_attribution_utm_medium', 'value' => 'referral'],
+            ['key' => '_wc_order_attribution_utm_content', 'value' => 'Fast checkout']
         ],
         'line_items' => [
             ['product_id' => absint($f('product_id') ?: 1), 'quantity' => 1]

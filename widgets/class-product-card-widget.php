@@ -149,7 +149,7 @@ class Product_Card_Widget extends Widget_Base {
             return;
         }
 
-        // 🔐 Get API credentials from settings
+        // API credentials from settings
         $store_url       = rtrim( get_option('fast_checkout_store_url'), '/' );
         $consumer_key    = fc_decrypt( get_option('fast_checkout_consumer_key') );
         $consumer_secret = fc_decrypt( get_option('fast_checkout_consumer_secret') );
@@ -170,9 +170,9 @@ class Product_Card_Widget extends Widget_Base {
 
             if ( ! $product_id ) continue;
 
-            // 🚀 Implement Caching
+            // Caching
       
-            $cache_key = 'fast_checkout_product_' . $keysubstr . '_' . $product_id;
+            $cache_key = 'fast_checkout_product_' . $product_id;
             $body = get_transient( $cache_key );
 
             if ( false === $body ) {
@@ -191,7 +191,7 @@ class Product_Card_Widget extends Widget_Base {
 
                 $body = json_decode( wp_remote_retrieve_body( $response ), true );
 
-                // Cache result for 1 hour (3600 seconds)
+                // Cache result for 1 hour
                 set_transient( $cache_key, $body, 3600 );
             }
 
