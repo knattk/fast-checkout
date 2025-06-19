@@ -47,10 +47,13 @@
     border-radius: 10px;
     font-size: 1.05rem;
     font-weight: bold;
-    display: block;
+    font-weight: bold;
+    display: flex;
     text-align: center;
     background-size: 400% 400%;
-	animation: gradient 8s ease infinite;
+    animation: gradient 8s ease infinite;
+    align-items: center;
+    justify-content: center;
 
 }
 .product-details .buttons a.add-to-cart-btn {

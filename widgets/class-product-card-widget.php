@@ -61,6 +61,12 @@ class Product_Card_Widget extends Widget_Base {
             'type' => Controls_Manager::TEXT,
             'default' => 'product_id',
         ] );
+
+        $this->add_control( 'primary_button_text', [
+            'label' => esc_html__( 'Button text', 'fast-checkout' ),
+            'type' => Controls_Manager::TEXT,
+            'default' => 'สั่งซื้อราคาพิเศษ',
+        ] );
 		
 		
         $this->add_control(
@@ -172,7 +178,7 @@ class Product_Card_Widget extends Widget_Base {
 
             // Caching
       
-            $cache_key = 'fast_checkout_product_' . $product_id;
+            $cache_key = 'fast_checkout_product_' . $keysubstr . $product_id;
             $body = get_transient( $cache_key );
 
             if ( false === $body ) {
@@ -191,8 +197,9 @@ class Product_Card_Widget extends Widget_Base {
 
                 $body = json_decode( wp_remote_retrieve_body( $response ), true );
 
-                // Cache result for 1 hour
-                set_transient( $cache_key, $body, 3600 );
+                if ( ! empty( $body ) && is_array( $body ) ) {
+                    set_transient( $cache_key, $body, 3600 );
+                }
             }
 
             if ( !empty( $body['name'] ) ) {
@@ -219,7 +226,7 @@ class Product_Card_Widget extends Widget_Base {
                             <?php } ?>
                             
                             <a class="add-to-cart-btn" href="<?php echo esc_attr( $settings['form_id'] ); ?>" data-product_id="<?php echo esc_attr( $product_id ); ?>" data-field_id="<?php echo esc_attr( $settings['field_id'] ); ?>">
-                                <?php echo esc_html__( 'สั่งซื้อราคาพิเศษ', 'fast-checkout' ); ?>
+                                <?php echo esc_html($settings['primary_button_text']); ?>
                             </a>
                             
                             

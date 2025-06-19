@@ -35,11 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
             title,
             image,
             price: {
-                regular: isNaN(regularPrice) ? regularPrice : singlePrice,
-                sale:
-                    isNaN(salePrice) && isNaN(regularPrice)
-                        ? salePrice
-                        : singlePrice,
+                regular: regularPrice ? regularPrice : singlePrice,
+                sale: salePrice ? salePrice : singlePrice,
             },
         };
     };

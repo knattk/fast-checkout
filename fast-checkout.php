@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fast Checkout
  * Description: A custom Elementor widget plugin for WooCommerce API integration.
- * Version: 1.0.9
+ * Version: 1.0.10
  * Author: Khwaaan
  * Text Domain: fast-checkout
  */
@@ -11,7 +11,7 @@ namespace FastCheckout;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'FAST_CHECKOUT_VERSION', '1.0.9' );
+define( 'FAST_CHECKOUT_VERSION', '1.0.10' );
 define( 'FAST_CHECKOUT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'FAST_CHECKOUT_URL', plugin_dir_url( __FILE__ ) );
 
