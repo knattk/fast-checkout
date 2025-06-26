@@ -19,7 +19,7 @@ class Checkout_Form_Widget extends Widget_Base {
     }
 
     public function get_categories() {
-        return ['general'];
+        return ['woocommerce-elements'];
     }
 
     protected function _register_controls() {

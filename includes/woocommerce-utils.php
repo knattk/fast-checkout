@@ -90,3 +90,66 @@ function get_state_code( $local_name ) {
     
     return $map[$local_name] ?? $local_name;
 }
+
+function get_payment_name( $payment_method ) {
+    
+    if ( empty( $payment_method ) || ! is_string( $payment_method ) ) {
+        return $payment_method;
+    }
+    
+    $map = [
+        'cod' => 'ชำระเงินปลายทาง',
+        'bacs' => 'โอนผ่านบัญชีธนาคาร',
+        'omise' => 'บัตรเครดิตหรือเดบิต',
+        'omise_installment' => 'ผ่อนชำระผ่านบัตรเครดิต',
+        'omise_promptpay' => 'PromtPay',
+        'omise_internetbanking' => 'Internet Banking',
+        'omise_truemoney' => 'True Money',
+        'omise_mobilebanking' => 'Mobile Banking',
+        'omise_alipay' => 'AliPay'
+    ];
+    
+    return $map[$payment_method] ?? $payment_method;
+}
+
+function get_order_status( $payment_method ) {
+    
+    if ( empty( $payment_method ) || ! is_string( $payment_method ) ) {
+        return 'on-hold';
+    }
+    
+    $map = [
+        'cod' => 'processing',
+        'bacs' => 'on-hold',
+        'omise' => 'on-hold',
+        'omise_installment' => 'on-hold',
+        'omise_promptpay' => 'on-hold',
+        'omise_internetbanking' => 'on-hold',
+        'omise_truemoney' => 'on-hold',
+        'omise_mobilebanking' => 'on-hold',
+        'omise_alipay' => 'on-hold'
+    ];
+    
+    return $map[$payment_method] ?? $payment_method;
+}
+
+function get_paid_status( $payment_method ) {
+    
+    if ( empty( $payment_method ) || ! is_string( $payment_method ) ) {
+        return false;
+    }
+    
+    $map = [
+        'cod' => true,
+        'bacs' => false,
+        'omise' => false,
+        'omise_installment' => false,
+        'omise_promptpay' => false,
+        'omise_internetbanking' => false,
+        'omise_truemoney' => false,
+        'omise_mobilebanking' => false,
+        'omise_alipay' => false,
+    ];
+    
+    return $map[$payment_method] ?? $payment_method;
+}

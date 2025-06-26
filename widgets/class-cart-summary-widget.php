@@ -23,7 +23,7 @@ class Cart_Summary_Widget extends Widget_Base {
     }
 
     public function get_categories() {
-        return ['basic'];
+        return ['woocommerce-elements'];
     }
     
     public function get_style_depends() {

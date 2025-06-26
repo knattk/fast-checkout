@@ -30,11 +30,11 @@ class Product_Card_Widget extends Widget_Base {
     }
 
     public function get_icon() {
-        return 'eicon-product-box';
+        return 'eicon-accordion';
     }
 
     public function get_categories() {
-        return [ 'basic' ];
+        return [ 'woocommerce-elements' ];
     }
     
     public function get_style_depends() {
@@ -229,10 +229,7 @@ class Product_Card_Widget extends Widget_Base {
                                 <?php echo esc_html($settings['primary_button_text']); ?>
                             </a>
                             
-                            
-                           
                         </div>
-                        
                         
                     </div>
 
