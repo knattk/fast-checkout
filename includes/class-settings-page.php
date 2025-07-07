@@ -1,7 +1,7 @@
 <?php
 namespace FastCheckout;
 
-if ( ! function_exists( 'FastCheckout\\fc_encrypt' ) ) {
+if ( ! function_exists( 'FastCheckout\\fc_encrypt' ) || !function_exists( 'FastCheckout\\fc_decrypt' ) ) {
     require_once plugin_dir_path( __FILE__ ) . '/utils.php';
 }
 
@@ -145,7 +145,7 @@ class Settings_Page {
     public function register_webhook_endpoint() {
         register_rest_route('fast-checkout/v1', '/webhook', [
             'methods' => 'POST',
-            'callback' => __NAMESPACE__ . '\\handle_webhook',
+            'callback' => [new \FastCheckout\WebhookHandler(), 'handle_webhook'],
             'permission_callback' => '__return_true'
         ]);
     }

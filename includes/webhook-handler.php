@@ -4,11 +4,11 @@ namespace FastCheckout;
 use WP_REST_Request;
 use WP_REST_Response;
 
-if ( ! function_exists( 'FastCheckout\\get_state_code' ) ) {
+if ( ! function_exists( 'FastCheckout\\get_state_code' ) || ! function_exists( 'FastCheckout\\get_payment_name') || ! function_exists( 'FastCheckout\\get_paid_status') || ! function_exists( 'FastCheckout\\get_order_status'  ) ) {
     require_once plugin_dir_path( __FILE__ ) . '/woocommerce-utils.php';
 }
-if ( ! function_exists( 'FastCheckout\\get_payment_name' ) ) {
-    require_once plugin_dir_path( __FILE__ ) . '/woocommerce-utils.php';
+if ( ! function_exists( 'FastCheckout\\fc_encrypt' ) || !function_exists( 'FastCheckout\\fc_decrypt' ) ) {
+    require_once plugin_dir_path( __FILE__ ) . '/utils.php';
 }
 
 class WebhookHandler {
@@ -24,11 +24,12 @@ class WebhookHandler {
         $this->store_url = get_option('fast_checkout_store_url');
         $this->consumer_key = fc_decrypt(get_option('fast_checkout_consumer_key'));
         $this->consumer_secret = fc_decrypt(get_option('fast_checkout_consumer_secret'));
-        $this->site_url = $_SERVER['HTTP_HOST'];
+        $this->site_url = $_SERVER['HTTP_HOST'] ?? get_site_url();
     }
     
     public function handle_webhook(WP_REST_Request $request) {
         try {
+            $this->log_woocommerce_response("trying...");
             // Validate request
             $validation_result = $this->validate_request($request);
             if (is_wp_error($validation_result)) {
@@ -39,6 +40,18 @@ class WebhookHandler {
             $data = $this->parse_request_data($request);
             $this->log_webhook_data($request, $data);
             
+
+            // Check nouce
+            $nonce = $data['fast_checkout_nonce'] ?? null;
+            if (! $nonce || ! wp_verify_nonce($nonce, 'fast_checkout_nonce_action')) {
+                return new \WP_REST_Response(['error' => 'Invalid nonce'], 403);
+            }
+            file_put_contents(
+                WP_CONTENT_DIR . '/webhook.log', 
+                json_encode($nonce, JSON_PRETTY_PRINT) . "\n", 
+                FILE_APPEND
+            );
+
             // Create order data
             $order_data = $this->build_order_data($data);
             
@@ -208,14 +221,22 @@ class WebhookHandler {
             'decoded_response' => json_decode($response_body, true),
         ];
         
-        file_put_contents(
-            WP_CONTENT_DIR . '/webhook.log', 
-            json_encode($log_data, JSON_PRETTY_PRINT) . "\n", 
-            FILE_APPEND
-        );
+        $log_path = WP_CONTENT_DIR . '/webhook.log';
+        if (is_writable(WP_CONTENT_DIR)) {
+            file_put_contents($log_path, json_encode($log_data, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
+        } else {
+            error_log('FastCheckout: Cannot write to log file at ' . $log_path);
+        }
+
+        // file_put_contents(
+        //     WP_CONTENT_DIR . '/webhook.log', 
+        //     json_encode($log_data, JSON_PRETTY_PRINT) . "\n", 
+        //     FILE_APPEND
+        // );
     }
     
     private function log_error($error_message) {
         error_log("FastCheckout Webhook Error: {$error_message}");
     }
 }
+

@@ -16,8 +16,9 @@ class Widget_Loader {
 	}
 
 	private function include_widgets_files() {
-		require_once FAST_CHECKOUT_PATH . 'widgets/class-product-card-widget.php';
-		require_once FAST_CHECKOUT_PATH . 'widgets/class-cart-summary-widget.php';
+		require_once FAST_CHECKOUT_PATH . 'widgets/product-card.php';
+		require_once FAST_CHECKOUT_PATH . 'widgets/cart-summary.php';
+		require_once FAST_CHECKOUT_PATH . 'widgets/checkout-form.php';
 	}
 
 	public function register_widgets() {
@@ -27,17 +28,21 @@ class Widget_Loader {
 
 		$widgets_manager->register( new \FastCheckout\Product_Card_Widget() );
 		$widgets_manager->register( new \FastCheckout\Cart_Summary_Widget() );
+		$widgets_manager->register( new \FastCheckout\Checkout_Form_Widget() );
 	}
 
 	public function widget_styles() {
 		wp_register_style('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/product-card.css',[],FAST_CHECKOUT_VERSION);
 		wp_register_style('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/cart-summary.css',[],FAST_CHECKOUT_VERSION);
+		wp_register_style('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/checkout-form.css',[],FAST_CHECKOUT_VERSION);
 	}
 
 	public function widget_scripts() {
 		wp_register_script('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/product-card.js',[],FAST_CHECKOUT_VERSION,true
 		);
 		wp_register_script('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/cart-summary.js',[],FAST_CHECKOUT_VERSION,true
+		);
+		wp_register_script('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/checkout-form.js',[],FAST_CHECKOUT_VERSION,true
 		);
 	}
 

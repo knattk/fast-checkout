@@ -7,11 +7,15 @@
     display: block;
     opacity: 1;
     height: auto;
-
+    background-color: #fff;
+}
+.fast-checkout-cart-container :is(h1,h2,h3,h4,h5,h6) {
+    margin: 0;
+    font-size: 1rem;
 }
 #fast-checkout-cart-items {
     overflow: hidden;
-    min-height: 225px;
+    min-height: 190px;
 }
 #fast-checkout-cart-items.loading:after {
     content: " ";

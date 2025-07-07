@@ -84,7 +84,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Optional: re-render on sessionStorage changes if needed
     window.addEventListener('storage', function (event) {
         if (event.key === CART_KEY) {
-            renderCartSummary();
+            setTimeout(() => {
+                renderCartSummary();
+            }, 100);
         }
     });
 
@@ -92,7 +94,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.add-to-cart-btn').forEach((btn) => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            renderCartSummary();
+            setTimeout(() => {
+                renderCartSummary();
+            }, 100);
         });
     });
 });
