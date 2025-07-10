@@ -106,7 +106,7 @@ class WebhookHandler {
         
         return [
             'payment_method' => $payment_info['method'],
-            'payment_title' => $payment_info['title'],
+            'payment_method_title' => $payment_info['title'],
             'set_paid' => $payment_info['paid_status'],
             'customer_note' => 'สั่งซื้อผ่านเว็บไซต์ ' . $this->site_url,
             'status' => $payment_info['order_status'],

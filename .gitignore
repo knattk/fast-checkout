@@ -54,3 +54,10 @@ checkout-form.js
 
 # macOS
 .DS_Store
+
+# Node + Sass
+node_modules/
+package-lock.json
+package.json
+.sass-cache/
+*.map

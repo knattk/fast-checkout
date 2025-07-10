@@ -3,6 +3,7 @@ namespace FastCheckout;
 
 use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
+use Elementor\Repeater;
 
 class Checkout_Form_Widget extends Widget_Base {
 
@@ -21,14 +22,25 @@ class Checkout_Form_Widget extends Widget_Base {
     public function get_categories() {
         return ['woocommerce-elements'];
     }
+
     public function get_style_depends() {
-    	return [ 'fast-cart-checkout-form' ];
+        return ['fast-cart-checkout-form'];
     }
+
     public function get_script_depends() {
-    	return [ 'fast-cart-checkout-form' ];
+        return ['fast-cart-checkout-form'];
     }
 
     protected function _register_controls() {
+        $this->register_form_controls();
+        $this->register_style_controls();
+        $this->register_container_controls();
+    }
+
+    /**
+     * Register form content controls
+     */
+    private function register_form_controls() {
         $this->start_controls_section(
             'form_section',
             [
@@ -37,275 +49,380 @@ class Checkout_Form_Widget extends Widget_Base {
             ]
         );
 
-        // $this->add_control('product_id', [
-        //     'label' => __('Product ID', 'fast-checkout'),
-        //     'type' => Controls_Manager::NUMBER,
-        //     'default' => 1,
-        // ]);
+        // Product ID control
+        $this->add_control('product_id', [
+            'label' => __('Product ID', 'fast-checkout'),
+            'type' => Controls_Manager::NUMBER,
+            'default' => 1,
+        ]);
 
-        // $this->add_control('payment', [
-        //     'label' => __('Payment Method', 'fast-checkout'),
-        //     'type' => Controls_Manager::SELECT,
-        //     'options' => [
-        //         'cod' => __('Cash on Delivery', 'fast-checkout'),
-        //         'bacs' => __('Bank Transfer', 'fast-checkout'),
-        //     ],
-        //     'default' => 'cod',
-        // ]);
+        // Payment method controls
+        $this->add_payment_method_controls();
+
+        // Bank account repeater
+        $this->add_bank_account_repeater();
 
         $this->end_controls_section();
-
-        $this->start_controls_section(
-			'style_section',
-			[
-				'label' => esc_html__( 'Style', 'fast-checkout' ),
-				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
-			]
-		);
-		
-	
-                $this->add_group_control(
-        			\Elementor\Group_Control_Typography::get_type(),
-        			[
-        				'name' => 'content_typography',
-        				'selector' => '{{WRAPPER}} .fast-checkout_form h4',
-        			]
-        		);
-    		
-        		$this->add_control(
-        			'margin',
-        			[
-        				'label' => esc_html__( 'Margin', 'fast-checkout' ),
-        				'type' => \Elementor\Controls_Manager::DIMENSIONS,
-        				'size_units' => [ 'px', '%', 'em', 'rem', 'custom' ],
-        				'default' => [
-        					'top' => 0,
-        					'right' => 0,
-        					'bottom' => 1,
-        					'left' => 0,
-        					'unit' => 'em',
-        					'isLinked' => false,
-        				],
-        				'selectors' => [
-        					'{{WRAPPER}} .fast-checkout_form h4' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-        				],
-        			]
-        		);
-
-            
-            $this->end_controls_section();
-            
-            $this->start_controls_section(
-            	'section_container',
-            	[
-            		'label' => esc_html__( 'Container', 'fast-checkout' ),
-            		'tab' => \Elementor\Controls_Manager::TAB_STYLE,
-            	]
-            );
-
-
-                
-        		$this->add_control(
-        			'container_padding',
-        			[
-        				'label' => esc_html__( 'Padding', 'fast-checkout' ),
-        				'type' => \Elementor\Controls_Manager::DIMENSIONS,
-        				'size_units' => [ 'px', '%', 'em', 'rem', 'custom' ],
-        				'default' => [
-        					'top' => 1,
-        					'right' => 1,
-        					'bottom' => 1,
-        					'left' => 1,
-        					'unit' => 'em',
-        					'isLinked' => false,
-        				],
-        				'selectors' => [
-        					'{{WRAPPER}} .fast-checkout_form' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-        				],
-        			]
-        		);
-        		
-        		$this->add_group_control(
-        			\Elementor\Group_Control_Box_Shadow::get_type(),
-        			[
-        				'name' => 'container_box_shadow',
-        				'selector' => '{{WRAPPER}} .fast-checkout_form',
-        			]
-        		);
-        		
-        		$this->add_control(
-        			'container_border_radius',
-        			[
-        				'label' => esc_html__( 'Border radius', 'fast-checkout' ),
-        				'type' => \Elementor\Controls_Manager::DIMENSIONS,
-        				'size_units' => [ 'px', '%', 'em', 'rem', 'custom' ],
-        				'default' => [
-        					'top' => 0,
-        					'right' => 0,
-        					'bottom' => 1,
-        					'left' => 0,
-        					'unit' => 'px',
-        					'isLinked' => false,
-        				],
-        				'selectors' => [
-        					'{{WRAPPER}} .fast-checkout_form' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-        				],
-        			]
-        		);
-        		
-		
-		$this->end_controls_section();
-
     }
 
+    /**
+     * Add payment method controls
+     */
+    private function add_payment_method_controls() {
+        $this->add_control(
+            'is_method_cod',
+            [
+                'label' => esc_html__('เก็บเงินปลายทาง', 'fast-checkout'),
+                'type' => Controls_Manager::SWITCHER,
+                'return_value' => 'yes',
+                'default' => 'yes',
+            ]
+        );
+
+        $this->add_control(
+            'is_method_bacs',
+            [
+                'label' => esc_html__('โอนผ่านธนาคาร', 'fast-checkout'),
+                'type' => Controls_Manager::SWITCHER,
+                'return_value' => 'yes',
+                'default' => 'yes',
+            ]
+        );
+    }
+
+    /**
+     * Add bank account repeater control
+     */
+    private function add_bank_account_repeater() {
+        $repeater = new Repeater();
+
+        $repeater->add_control('bank_name', [
+            'label' => esc_html__('ชื่อธนาคาร', 'fast-checkout'),
+            'type' => Controls_Manager::TEXT,
+        ]);
+
+        $repeater->add_control('bank_owner', [
+            'label' => esc_html__('ชื่อบัญชี', 'fast-checkout'),
+            'type' => Controls_Manager::TEXT,
+        ]);
+
+        $repeater->add_control('bank_id', [
+            'label' => esc_html__('เลขบัญชี', 'fast-checkout'),
+            'type' => Controls_Manager::TEXT,
+        ]);
+
+        $this->add_control('bank_account', [
+            'label' => esc_html__('บัญชีธนาคาร', 'fast-checkout'),
+            'type' => Controls_Manager::REPEATER,
+            'fields' => $repeater->get_controls(),
+            'title_field' => 'ธนาคาร {{bank_name}}',
+            'require' => true
+        ]);
+    }
+
+    /**
+     * Register style controls
+     */
+    private function register_style_controls() {
+        $this->start_controls_section(
+            'style_section',
+            [
+                'label' => esc_html__('Style', 'fast-checkout'),
+                'tab' => Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'content_typography',
+                'selector' => '{{WRAPPER}} .fast-checkout_form h4',
+            ]
+        );
+
+        $this->add_control(
+            'margin',
+            [
+                'label' => esc_html__('Margin', 'fast-checkout'),
+                'type' => Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%', 'em', 'rem', 'custom'],
+                'default' => [
+                    'top' => 0,
+                    'right' => 0,
+                    'bottom' => 1,
+                    'left' => 0,
+                    'unit' => 'em',
+                    'isLinked' => false,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .fast-checkout_form h4' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
+    }
+
+    /**
+     * Register container style controls
+     */
+    private function register_container_controls() {
+        $this->start_controls_section(
+            'section_container',
+            [
+                'label' => esc_html__('Container', 'fast-checkout'),
+                'tab' => Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        $this->add_control(
+            'container_padding',
+            [
+                'label' => esc_html__('Padding', 'fast-checkout'),
+                'type' => Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%', 'em', 'rem', 'custom'],
+                'default' => [
+                    'top' => 1,
+                    'right' => 1,
+                    'bottom' => 1,
+                    'left' => 1,
+                    'unit' => 'em',
+                    'isLinked' => false,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .fast-checkout_form' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Box_Shadow::get_type(),
+            [
+                'name' => 'container_box_shadow',
+                'selector' => '{{WRAPPER}} .fast-checkout_form',
+            ]
+        );
+
+        $this->add_control(
+            'container_border_radius',
+            [
+                'label' => esc_html__('Border radius', 'fast-checkout'),
+                'type' => Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%', 'em', 'rem', 'custom'],
+                'default' => [
+                    'top' => 0,
+                    'right' => 0,
+                    'bottom' => 1,
+                    'left' => 0,
+                    'unit' => 'px',
+                    'isLinked' => false,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .fast-checkout_form' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
+    }
+
+    /**
+     * Render the widget output
+     */
     protected function render() {
         $settings = $this->get_settings_for_display();
+        
+        $this->render_form_start();
+        $this->render_billing_fields();
+        $this->render_payment_methods($settings);
+        $this->render_form_end();
+        $this->render_external_scripts();
+        $this->render_checkout_form_script();
+    }
+
+    /**
+     * Render form start
+     */
+    private function render_form_start() {
         ?>
         <form method="post" class="fast-checkout_form" id="fast-checkout_form">
             <?php wp_nonce_field('fast_checkout_nonce_action', 'fast_checkout_nonce'); ?>
+        <?php
+    }
 
-            <div class="billing">
-                
-                <input type="hidden" name="product_id">
+    /**
+     * Render billing fields
+     */
+    private function render_billing_fields() {
+        ?>
+        <fieldset class="billing">
+            <input type="hidden" name="product_id">
 
-                <label for="billing_first_name">ชื่อ - สกุล</label>
-                <input type="text" name="billing_first_name" id="billing_first_name" required value="test test">
+            <label for="billing_first_name">ชื่อ - สกุล</label>
+            <input type="text" name="billing_first_name" id="billing_first_name" required value="test test">
 
-                <div id="billing_phone_group">
-                    <label for="billing_phone">เบอร์โทร</label>
-                    <input type="text" name="billing_phone" id="billing_phone" required value="0999999999" placeholder="เบอร์โทร">
-                </div>
-                <div id="billing_email_group">
-                    <label for="billing_email">อีเมล</label>
-                    <input type="email" name="billing_email" id="billing_email" required value="nattakanc@mindedge.co.th" placeholder="อีเมลรับอัพเดทสถานะสั่งซื้อ">
-                </div>
-                <div id="billing_address_1_group">
-                    <label for="billing_address_1">บ้านเลขที่ / ซอย / ถนน</label>
-                    <input type="text" name="billing_address_1" id="billing_address_1" required value="tese" placeholder="บ้านเลขที่ / ซอย / ถนน">
-                </div>
-                <div id="billing_postcode_group">
-                    <label for="billing_postcode">รหัสไปรษณีย์</label>
-                    <input type="text" name="billing_postcode" id="billing_postcode" required placeholder="รหัสไปรษณีย์">
-                </div>
-                <div id="billing_address_2_group">
-                    <label for="billing_address_2">แขวง / ตำบล</label>
-                    <input type="text" name="billing_address_2" id="billing_address_2" placeholder="แขวง/ตำบล">
-                </div>
-                <div id="billing_city_group">
-                    <label for="billing_city">เขต / อำเภอ</label>
-                    <input type="text" name="billing_city" id="billing_city" required placeholder="เขต/อำเภอ">
-                </div>
-                <div id="billing_state_group">
-                    <label for="billing_state">จังหวัด</label>
-                    <input type="text" name="billing_state" id="billing_state" placeholder="จังหวัด">
-                </div>      
-                
-               
+            <div id="billing_phone_group">
+                <label for="billing_phone">เบอร์โทร</label>
+                <input type="tel" name="billing_phone" id="billing_phone" required value="0999999999" placeholder="เบอร์โทร">
             </div>
+
+            <div id="billing_email_group">
+                <label for="billing_email">อีเมล</label>
+                <input type="email" name="billing_email" id="billing_email" required value="nattakanc@mindedge.co.th" placeholder="อีเมลรับอัพเดทสถานะสั่งซื้อ">
+            </div>
+
+            <div id="billing_address_1_group">
+                <label for="billing_address_1">บ้านเลขที่ / ซอย / ถนน</label>
+                <input type="text" name="billing_address_1" id="billing_address_1" required value="tese" placeholder="บ้านเลขที่ / ซอย / ถนน">
+            </div>
+
+            <div id="billing_postcode_group">
+                <label for="billing_postcode">รหัสไปรษณีย์</label>
+                <input type="text" name="billing_postcode" id="billing_postcode" required placeholder="รหัสไปรษณีย์">
+            </div>
+
+            <div id="billing_address_2_group">
+                <label for="billing_address_2">แขวง / ตำบล</label>
+                <input type="text" name="billing_address_2" id="billing_address_2" placeholder="แขวง/ตำบล">
+            </div>
+
+            <div id="billing_city_group">
+                <label for="billing_city">เขต / อำเภอ</label>
+                <input type="text" name="billing_city" id="billing_city" required placeholder="เขต/อำเภอ">
+            </div>
+
+            <div id="billing_state_group">
+                <label for="billing_state">จังหวัด</label>
+                <input type="text" name="billing_state" id="billing_state" placeholder="จังหวัด">
+            </div>
+        </fieldset>
+        <?php
+    }
+
+    /**
+     * Render payment methods
+     */
+    private function render_payment_methods($settings) {
+        ?>
+        <fieldset class="payment">
+            <legend>ช่องทางชำระเงิน</legend>
             
-            <div class="payment">
-                 <label for="checkout_payment">ช่องทางชำระเงิน</label>
-                <select name="checkout_payment">
-                    <option value="cod" selected>จ่ายเงินหน้าบ้าน</option>
-                    <option value="bacs">โอนผ่านบัญชีธนาคาร</option>
-                </select>
-            </div>
-            <button type="submit">ยืนยันการสั่งซื้อ</button>
-        </form>
-        
-<!-- Keep jQuery only for jquery.Thailand.js -->
-<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dependencies/JQL.min.js"></script>
-<script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dependencies/typeahead.bundle.js"></script>
-<link rel="stylesheet" href="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dist/jquery.Thailand.min.css">
-<script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dist/jquery.Thailand.min.js"></script>
+            <?php
+            $this->render_cod_payment($settings);
+            $this->render_bank_transfer_payment($settings);
+            ?>
+        </fieldset>
+        <?php
+    }
 
-<script>
-    // Pure JavaScript: Form submit
-    document.getElementById('fast-checkout_form').addEventListener('submit', async function (e) {
-        e.preventDefault();
+    /**
+     * Render COD payment method
+     */
+    private function render_cod_payment($settings) {
+        if ($settings['is_method_cod'] !== 'yes') {
+            return;
+        }
+        ?>
+        <div class="payment-method">
+            <label>
+                <div class="payment-details">
+                    <div class="payment-type">
+                        <input type="radio" name="checkout_payment" value="cod" checked /> 
+                        เก็บเงินปลายทาง
+                    </div>
+                    <div class="payment-desc">
+                        - จ่ายเงินสด/โอน<br>
+                        - จ่ายบัตรเครดิตหน้าบ้าน (เฉพาะกทมและปริมณฑล)
+                    </div>
+                </div>
+            </label>
+        </div>
+        <?php
+    }
 
-        const form = e.target;
-        let storeUrl = null;
+    /**
+     * Render bank transfer payment method
+     */
+    private function render_bank_transfer_payment($settings) {
+        if ($settings['is_method_bacs'] !== 'yes') {
+            return;
+        }
+        ?>
+        <div class="payment-method">
+            <label>
+                <div class="payment-details">
+                    <div class="payment-type">
+                        <input type="radio" name="checkout_payment" value="bacs" /> 
+                        โอนผ่านธนาคาร
+                    </div>
+                    <div class="payment-desc">
+                        <?php $this->render_bank_accounts($settings); ?>
+                    </div>
+                </div>
+            </label>
+        </div>
+        <?php
+    }
 
-        const data = {
-            fast_checkout_nonce: form.fast_checkout_nonce.value,
-            fields: {
-                payment: { value: form.checkout_payment.value },
-                product_id: { value: form.product_id.value },
-                billing_full_name: { value: form.billing_first_name.value },
-                billing_address_1: { value: form.billing_address_1.value },
-                billing_address_2: { value: form.billing_address_2.value },
-                billing_city: { value: form.billing_city.value },
-                billing_state: { value: form.billing_state.value },
-                billing_postcode: { value: form.billing_postcode.value },
-                billing_phone: { value: form.billing_phone.value },
-                billing_email: { value: form.billing_email.value },
-            },
-        };
-
-        try {
-            const response = await fetch('<?php echo esc_url(rest_url("fast-checkout/v1/webhook")); ?>', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            const result = await response.json();
-            console.log('Raw fetch response:', response);
-            console.log('Parsed JSON result:', result);
-
-            storeUrl = getBaseUrl(result['payment_url']);
-
-            function getBaseUrl(url) {
-                return url.replace(/^(https?:\/\/[^/]+).*/, '$1/');
+    /**
+     * Render bank accounts list
+     */
+    private function render_bank_accounts($settings) {
+        echo "<ul>";
+        foreach ($settings['bank_account'] as $item) {
+            $bank_id = esc_attr($item['bank_id'] ?? '');
+            $bank_name = esc_attr($item['bank_name'] ?? '');
+            $bank_owner = esc_attr($item['bank_owner'] ?? '');
+            
+            if (!$bank_id) {
+                continue;
             }
-
-            console.log(
-                `${storeUrl}checkout/order-received/${result['id']}/?key=${result['order_key']}`
+            
+            printf(
+                '<li><span class="bank_name"><strong>%s</strong></span><span class="bank_id">%s</span><span class="bank_owner">%s</span></li>',
+                $bank_name,
+                $bank_id,
+                $bank_owner
             );
-        } catch (err) {
-            console.log(err);
         }
-    });
+        echo "</ul>";
+    }
 
-    // jQuery is required for $.Thailand — leave it here
-    $.Thailand({
-        $district: $('#billing_address_2'),
-        $amphoe: $('#billing_city'),
-        $province: $('#billing_state'),
-        $zipcode: $('#billing_postcode'),
-    });
+    /**
+     * Render form end
+     */
+    private function render_form_end() {
+        ?>
+        <button type="submit" id="fast-checkout-submit">ยืนยันการสั่งซื้อ</button>
+        </form>
+        <?php
+    }
 
-    // Pure JavaScript: Hide/show address fields based on postcode
-    document.addEventListener('DOMContentLoaded', function () {
-        const zipcode = document.getElementById('billing_postcode');
-        const amphoe = document.getElementById('billing_city');
-        const province = document.getElementById('billing_state');
-        const address2 = document.getElementById('billing_address_2');
+    /**
+     * Render external script dependencies
+     */
+    private function render_external_scripts() {
+        ?>
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dependencies/JQL.min.js"></script>
+        <script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dependencies/typeahead.bundle.js"></script>
+        <link rel="stylesheet" href="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dist/jquery.Thailand.min.css">
+        <script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dist/jquery.Thailand.min.js"></script>
+        <?php
+    }
 
-        function toggleAddressFields() {
-            const val = zipcode.value.trim();
-
-            [amphoe, province, address2].forEach(el => {
-                const wrapper = el.closest('div'); // Adjust if your wrapper is <p> or something else
-                if (wrapper) {
-                    wrapper.style.display = val === '' ? 'none' : 'block';
-                }
-            });
-        }
-
-        // Initial state
-        toggleAddressFields();
-
-        // Listen for input changes
-        zipcode.addEventListener('input', toggleAddressFields);
-    });
-</script>
-
-
+    /**
+     * Render checkout form script
+     */
+    private function render_checkout_form_script() {
+        $webhook_url = esc_url(rest_url("fast-checkout/v1/webhook"));
+        ?>
+        <script>
+            // Pass PHP data to JavaScript
+            window.fastCheckoutConfig = {
+                webhookUrl: '<?php echo $webhook_url; ?>'
+            };
+        </script>
         <?php
     }
 }

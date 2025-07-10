@@ -1,0 +1,138 @@
+.fast-checkout-cart-container {
+  display: none;
+  height: 0;
+  transition: all 0.5s ease;
+
+  &.active {
+    display: block;
+    opacity: 1;
+    height: auto;
+    background-color: #fff;
+  }
+
+  :is(h1, h2, h3, h4, h5, h6) {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+#fast-checkout-cart-items {
+  overflow: hidden;
+  min-height: 190px;
+
+  &.loading::after {
+    content: " ";
+    width: 20%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 1) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmer 2.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(600%);
+  }
+}
+
+.fast-cart-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  .fast-cart-item-image {
+    width: 25%;
+    border-radius: 10px;
+
+    img {
+      border-radius: 10px;
+      display: flex;
+    }
+  }
+
+  .fast-cart-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+    background: #f9f9f9;
+    border-radius: 10px;
+  }
+
+  .fast-cart-item-details {
+    display: flex;
+    flex-direction: column;
+
+    span {
+      font-size: 0.95rem;
+      color: #6a6a6a;
+    }
+  }
+}
+
+.fast-cart-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+}
+
+.fast-cart-table {
+  width: 100%;
+  text-align: left;
+  font-size: 0.85em !important;
+
+  :is(th, td) {
+    border-bottom: 1px dashed #e9e9e9 !important;
+  }
+
+  td {
+    text-align: right;
+  }
+
+  tr:not(:last-child) {
+    font-size: 0.85em !important;
+  }
+
+  .total {
+    font-weight: bold;
+    color: #1fb31f;
+  }
+
+  .discount {
+    color: #d80a0a;
+  }
+
+  .shipping {
+    color: #1fb31f;
+  }
+}
+
+.fast-saving {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  font-weight: bold;
+  font-size: 1rem;
+  background: #e1f8e1;
+  padding: 0.25rem 0.5rem;
+  border-radius: 10px;
+  color: #179117;
+
+  svg {
+    width: 30px;
+    fill: #179117;
+  }
+}

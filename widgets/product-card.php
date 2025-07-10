@@ -88,6 +88,17 @@ class Product_Card_Widget extends Widget_Base {
 			    'is_custom_shop_url' => 'yes',
 		    ],
         ] );
+
+        $this->add_control(
+        	'is_product-short_description',
+        	[
+        		'label' => esc_html__( 'รายละเอียดสินค้า', 'fast-checkout' ),
+        		'type' => \Elementor\Controls_Manager::SWITCHER,
+        		'return_value' => 'yes',
+        		'default' => 'no',
+        		
+        	]
+        );
         
         
         $repeater = new Repeater();
@@ -397,7 +408,11 @@ class Product_Card_Widget extends Widget_Base {
                     
                     <div class="product-details">
                         <h3><?php echo !empty($item['product_short_name']) ? $item['product_short_name'] : esc_html($body['name']); ?></h3>
-                        <p class="product-price"><?php echo wp_kses_post( $body['price_html'] ?? '$' . $body['price'] ); ?></p>
+                        
+                        <?php if ($settings['is_product-short_description'] === 'yes') { ?>
+                            <div class="product-short_description"><?php echo wp_kses_post( $body['short_description'] ?? ''); ?></div>
+                        <?php } ?>
+                            <p class="product-price"><?php echo wp_kses_post( $body['price_html'] ?? '$' . $body['price'] ); ?></p>
                         <span class="product-like"><?php echo esc_html( $product_like ); ?> คนสนใจ</span>
                         <div class="buttons">
                             <?php if ( $settings['is_custom_shop_url'] === 'yes' ) {  ?>
