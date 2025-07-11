@@ -48,8 +48,7 @@ wp-config.php
 #/wp-content/themes
 
 # On progress
-class-checkout-form.php
-checkout-form.js
+#checkout-form.js
 
 
 # macOS

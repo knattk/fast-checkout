@@ -50,6 +50,7 @@
 }
 .fast-checkout_form .payment legend {
   color: #3b4048;
+  font-size: 1.1rem;
 }
 .fast-checkout_form .payment label {
   font-weight: bold;
