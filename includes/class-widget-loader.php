@@ -38,11 +38,11 @@ class Widget_Loader {
 	}
 
 	public function widget_scripts() {
-		wp_register_script('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/product-card.js',[],FAST_CHECKOUT_VERSION,true
+		wp_register_script('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/js/product-card.js',[],FAST_CHECKOUT_VERSION,true
 		);
-		wp_register_script('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/cart-summary.js',[],FAST_CHECKOUT_VERSION,true
+		wp_register_script('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/js/cart-summary.js',[],FAST_CHECKOUT_VERSION,true
 		);
-		wp_register_script('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/checkout-form.js',[],FAST_CHECKOUT_VERSION,true
+		wp_register_script('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/js/checkout-form.js',[],FAST_CHECKOUT_VERSION,true
 		);
 	}
 
