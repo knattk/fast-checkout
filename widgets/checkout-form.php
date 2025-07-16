@@ -5,6 +5,8 @@ use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
 use Elementor\Repeater;
 
+
+
 class Checkout_Form_Widget extends Widget_Base {
 
     public function get_name() {
@@ -31,6 +33,10 @@ class Checkout_Form_Widget extends Widget_Base {
         return ['fast-cart-checkout-form'];
     }
 
+    // public function get_script_depends(): array {
+	// 	return [ 'fast-cart-checkout-form', 'fast-cart-checkout-form_order-limit' ];
+	// }
+
     protected function _register_controls() {
         $this->register_form_controls();
         $this->register_style_controls();
@@ -56,11 +62,36 @@ class Checkout_Form_Widget extends Widget_Base {
             'default' => 1,
         ]);
 
+        
+
         // Payment method controls
         $this->add_payment_method_controls();
 
         // Bank account repeater
         $this->add_bank_account_repeater();
+
+        $this->add_control('policy_url', [
+            'label' => __('ลิงก์นโยบาย', 'fast-checkout'),
+            'type' => Controls_Manager::TEXT,
+            'default' => '/privacy-policy',
+            'label_block' => true,
+        ]);
+
+        $this->add_control('limit_timeout_hours', [
+            'label' => __('Limit hours', 'fast-checkout'),
+            'type' => Controls_Manager::NUMBER,
+            'default' => 0,
+        ]);
+
+
+        $this->add_control('limit_html_fallback', [
+            'label' => esc_html__('Show is for illigible user', 'fast-checkout'),
+            'type' => Controls_Manager::CODE,
+            'raw' => esc_html__( 'A very important message to show in the panel.', 'textdomain' ),
+            'language' => 'html',
+            'rows' => 20,
+        ]);
+
 
         $this->end_controls_section();
     }
@@ -119,6 +150,7 @@ class Checkout_Form_Widget extends Widget_Base {
             'require' => true
         ]);
     }
+
 
     /**
      * Register style controls
@@ -226,19 +258,27 @@ class Checkout_Form_Widget extends Widget_Base {
         $this->end_controls_section();
     }
 
+
+
+
+
     /**
      * Render the widget output
      */
+    
     protected function render() {
         $settings = $this->get_settings_for_display();
-        
+
         $this->render_form_start();
         $this->render_billing_fields();
         $this->render_payment_methods($settings);
+        $this->render_policy_fields($settings);
         $this->render_form_end();
-        $this->render_external_scripts();
+        $this->render_thai_address_scripts();
         $this->render_checkout_form_script();
+        
     }
+
 
     /**
      * Render form start
@@ -259,7 +299,7 @@ class Checkout_Form_Widget extends Widget_Base {
             <input type="hidden" name="product_id">
 
             <label for="billing_first_name">ชื่อ - สกุล</label>
-            <input type="text" name="billing_first_name" id="billing_first_name" required value="test test">
+            <input type="text" name="billing_first_name" id="billing_first_name" required value="ชื่อทดสอบ นามสกุลปลอม">
 
             <div id="billing_phone_group">
                 <label for="billing_phone">เบอร์โทร</label>
@@ -273,7 +313,7 @@ class Checkout_Form_Widget extends Widget_Base {
 
             <div id="billing_address_1_group">
                 <label for="billing_address_1">บ้านเลขที่ / ซอย / ถนน</label>
-                <input type="text" name="billing_address_1" id="billing_address_1" required value="tese" placeholder="บ้านเลขที่ / ซอย / ถนน">
+                <input type="text" name="billing_address_1" id="billing_address_1" required value="111" placeholder="บ้านเลขที่ / ซอย / ถนน">
             </div>
 
             <div id="billing_postcode_group">
@@ -295,6 +335,7 @@ class Checkout_Form_Widget extends Widget_Base {
                 <label for="billing_state">จังหวัด</label>
                 <input type="text" name="billing_state" id="billing_state" placeholder="จังหวัด">
             </div>
+
         </fieldset>
         <?php
     }
@@ -389,6 +430,41 @@ class Checkout_Form_Widget extends Widget_Base {
     }
 
     /**
+     * Render policy
+     */
+    private function render_policy_fields($settings) { ?>
+        <fieldset class="policy">
+           
+             <div id="policy_consent_privacy_group">
+                 <input type="checkbox" name="policy_consent_privacy" id="policy_consent_privacy" required>
+                <label for="policy_consent_privacy">
+                    ฉันยอมรับ
+                    <a href="
+                    <?php 
+                        if (!empty($settings['policy_url'])) {
+                            echo esc_url($settings['policy_url']);
+                        } else {
+                            echo '#';
+                        }
+
+                    ?>
+                    " target="blank">
+                    ประกาศคุ้มครองข้อมูลส่วนบุคคล</a>เพื่อรับโปรโมชั่นพิเศษ
+                </label>
+ 
+            </div>
+            <div id="policy_consent_ad_group">
+                <input type="checkbox" name="policy_consent_ad" id="policy_consent_ad">
+                <label for="policy_consent_ad">ยินดีใช้ในการรับสิทธิพิเศษ ข่าวสาร และประชาสัมพันธ์เพื่อสิทธิประโยชน์ต่างๆ</label>
+                
+            </div>
+             <input type="hidden" name="limit_timeout_hours" id="limit_timeout_hours" value="<?php echo esc_html($settings['limit_timeout_hours']) ?>">
+        </fieldset>
+        <?php
+    }
+
+
+    /**
      * Render form end
      */
     private function render_form_end() {
@@ -402,9 +478,29 @@ class Checkout_Form_Widget extends Widget_Base {
     }
 
     /**
+     * Render FALLBACK FOR ILLIGIBLE USER
+     */
+    private function render_fallback_html_for_illigible_user($settings) { 
+
+        if ( empty( $settings['limit_html_fallback'] ) ) {
+			return;
+		}
+        
+        ?>
+        
+
+            <div class="form_fallback">
+                <?php echo $settings['limit_html_fallback'] ?>
+            </div>
+
+        <?php   
+        
+     }
+
+    /**
      * Render external script dependencies
      */
-    private function render_external_scripts() {
+    private function render_thai_address_scripts() {
         ?>
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dependencies/JQL.min.js"></script>
@@ -428,4 +524,5 @@ class Checkout_Form_Widget extends Widget_Base {
         </script>
         <?php
     }
+
 }

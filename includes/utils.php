@@ -21,4 +21,3 @@ function fc_decrypt( $data ) {
     $decrypted = openssl_decrypt( base64_decode( $data ), 'AES-256-CBC', $key, 0, $iv );
     return $decrypted; // no base64_decode here
 }
-

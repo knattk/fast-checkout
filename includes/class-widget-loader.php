@@ -21,6 +21,7 @@ class Widget_Loader {
 		require_once FAST_CHECKOUT_PATH . 'widgets/checkout-form.php';
 	}
 
+
 	public function register_widgets() {
 		$this->include_widgets_files();
 
@@ -38,17 +39,22 @@ class Widget_Loader {
 	}
 
 	public function widget_scripts() {
-		wp_register_script('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/js/product-card.js',[],FAST_CHECKOUT_VERSION,true
-		);
-		wp_register_script('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/js/cart-summary.js',[],FAST_CHECKOUT_VERSION,true
-		);
-		wp_register_script('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/js/checkout-form.js',[],FAST_CHECKOUT_VERSION,true
-		);
+		wp_register_script('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/js/product-card.js',[],FAST_CHECKOUT_VERSION,true);
+		wp_register_script('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/js/cart-summary.js',[],FAST_CHECKOUT_VERSION,true);
+		wp_register_script('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/js/checkout-form.js',[],FAST_CHECKOUT_VERSION,true);
+		// wp_register_script('fast-cart-checkout-form_order-limit',FAST_CHECKOUT_URL . 'assets/js/order-limit.js',[],FAST_CHECKOUT_VERSION,true);
 	}
+
+	
 
 	public function __construct() {
 		add_action( 'elementor/frontend/after_register_scripts', [ $this, 'widget_scripts' ] );
 		add_action( 'elementor/frontend/after_enqueue_styles', [ $this, 'widget_styles' ] );
 		add_action( 'elementor/widgets/register', [ $this, 'register_widgets' ] );
+		
 	}
+
 }
+
+
+

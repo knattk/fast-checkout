@@ -132,11 +132,47 @@
     /**
      * Handle form submission
      */
+    // async function handleFormSubmission(e) {
+    //     e.preventDefault();
+
+    //     const form = e.target;
+    //     const formData = buildFormData(form);
+
+    //     try {
+    //         const response = await fetch(window.fastCheckoutConfig.webhookUrl, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify(formData),
+    //         });
+
+    //         const result = await response.json();
+
+    //         // console.log(result);
+
+    //         if (result && !result.error) {
+    //             showOrderConfirmation(result);
+    //         } else {
+    //             console.warn('Line API error:', result.error);
+    //         }
+    //     } catch (error) {
+    //         console.error('Form submission error:', error);
+    //         showErrorMessage(
+    //             'เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง'
+    //         );
+    //     }
+    // }
+
     async function handleFormSubmission(e) {
         e.preventDefault();
 
         const form = e.target;
         const formData = buildFormData(form);
+
+        // Add essential security data
+        const securityData = await collectEssentialSecurityData();
+        Object.assign(formData, securityData);
 
         try {
             const response = await fetch(window.fastCheckoutConfig.webhookUrl, {
@@ -149,12 +185,10 @@
 
             const result = await response.json();
 
-            // console.log(result);
-
             if (result && !result.error) {
                 showOrderConfirmation(result);
             } else {
-                console.warn('Line API error:', result.error);
+                console.warn('API error:', result.error);
             }
         } catch (error) {
             console.error('Form submission error:', error);
@@ -164,12 +198,61 @@
         }
     }
 
+    // Collect only the most important security data
+    async function collectEssentialSecurityData() {
+        return {
+            // Critical tracking data
+            user_ip: (await getClientIP()) || '0.0.0.0',
+            user_agent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+
+            // Device fingerprinting (most effective)
+            screen_resolution: `${screen.width}x${screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            language: navigator.language,
+
+            // Session tracking
+            // session_id: getOrCreateSessionId(),
+            referrer: document.referrer,
+
+            // Bot detection
+            touch_support:
+                'ontouchstart' in window || navigator.maxTouchPoints > 0,
+        };
+    }
+
+    // Get client IP
+    async function getClientIP() {
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            return data.ip;
+        } catch (error) {
+            console.error('Failed to get client IP:', error);
+            return null;
+        }
+    }
+
+    // Session ID management
+    function getOrCreateSessionId() {
+        let sessionId = sessionStorage.getItem('form_session_id');
+        if (!sessionId) {
+            sessionId =
+                'sess_' +
+                Math.random().toString(36).substr(2, 9) +
+                Date.now().toString(36);
+            sessionStorage.setItem('form_session_id', sessionId);
+        }
+        return sessionId;
+    }
+
     /**
      * Build form data object
      */
     function buildFormData(form) {
         return {
             fast_checkout_nonce: form.fast_checkout_nonce.value,
+            limit_timeout_hours: form.limit_timeout_hours.value,
             fields: {
                 payment: { value: form.checkout_payment.value },
                 product_id: { value: form.product_id.value },
@@ -181,6 +264,10 @@
                 billing_postcode: { value: form.billing_postcode.value },
                 billing_phone: { value: form.billing_phone.value },
                 billing_email: { value: form.billing_email.value },
+                policy_consent_privacy: {
+                    value: form.policy_consent_privacy.value,
+                },
+                policy_consent_ad: { value: form.policy_consent_ad.value },
             },
         };
     }
@@ -235,6 +322,8 @@
                 </div>
                 <button class="close-button" aria-label="ปิด">×</button>
             </div>
+
+           
         `;
 
         const orderConfirmationBox = document.createElement('div');

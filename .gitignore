@@ -49,7 +49,7 @@ wp-config.php
 
 # On progress
 #checkout-form.js
-
+/routes/
 
 # macOS
 .DS_Store
@@ -60,3 +60,5 @@ package-lock.json
 package.json
 .sass-cache/
 *.map
+
+

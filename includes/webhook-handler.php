@@ -29,7 +29,6 @@ class WebhookHandler {
     
     public function handle_webhook(WP_REST_Request $request) {
         try {
-            $this->log_woocommerce_response("trying...");
             // Validate request
             $validation_result = $this->validate_request($request);
             if (is_wp_error($validation_result)) {
@@ -41,14 +40,30 @@ class WebhookHandler {
             $this->log_webhook_data($request, $data);
             
 
+            
+
             // Check nouce
             $nonce = $data['fast_checkout_nonce'] ?? null;
             if (! $nonce || ! wp_verify_nonce($nonce, 'fast_checkout_nonce_action')) {
                 return new \WP_REST_Response(['error' => 'Invalid nonce'], 403);
             }
+
+            // Check illigible user
+            // $user_ip = $data['user_ip'] ?? null;
+            // $transient_key = 'fast_checkout_user_' . md5($user_ip);
+            // $is_user_exit = get_transient($transient_key);
+
+            // if (false === $is_user_exit) {
+                
+            // } else {
+               
+            // }
+
+
+
             file_put_contents(
-                WP_CONTENT_DIR . '/webhook.log', 
-                json_encode($nonce, JSON_PRETTY_PRINT) . "\n", 
+                WP_CONTENT_DIR . '/form-data.log', 
+                json_encode($data, JSON_PRETTY_PRINT) . "\n", 
                 FILE_APPEND
             );
 
@@ -58,6 +73,8 @@ class WebhookHandler {
             // Send to WooCommerce
             $response = $this->send_to_woocommerce($order_data);
             
+            $this->set_db_transient_key($data);
+
             return $response;
             
         } catch (Exception $e) {
@@ -66,6 +83,32 @@ class WebhookHandler {
         }
     }
     
+    // Store user log with wp transient to support order limit per user
+    private function set_db_transient_key($order_data) {
+            // Get IP address
+            $ip_address = $order_data['user_ip'] ?? null;
+            $limit_timeout_hours = (int) ($order_data['limit_timeout_hours'] ?? 72);
+            $user_agent = $order_data['user_agent'] ?? null;
+            $user_phone = !empty($order_data['fields']['billing_phone']['value']) ? md5(trim($order_data['fields']['billing_phone']['value'])) : null;
+            $user_email = !empty($order_data['fields']['billing_email']['value']) ? md5(trim($order_data['fields']['billing_email']['value'])) : null;
+            // Generate transient key
+            $transient_key = 'fast_checkout_user_' .  md5($ip_address); //md5($ip_address)
+            $transient_data = [
+                // 'created_at' => time(),
+                'user_agent' => $user_agent,
+                'user_phone' => $user_phone,
+                'user_email' => $user_email,
+                'limit_timeout_hours' => $limit_timeout_hours * HOUR_IN_SECONDS
+            ];
+
+            if (!$ip_address) {
+                error_log('Fast Checkout: Missing IP address for transient key.');
+                return;
+            }
+            // Save IP and timestamp in transient for 24 hours
+	        set_transient( $transient_key, $transient_data, $limit_timeout_hours * HOUR_IN_SECONDS );
+    }
+
     // validate IP
     private function validate_request(WP_REST_Request $request) {
         if (empty($this->allowed_ips)) {
@@ -171,7 +214,7 @@ class WebhookHandler {
         ];
     }
     
-    // to WooCommerce
+    // send order data to WooCommerce
     private function send_to_woocommerce($order_data) {
         if (empty($this->store_url) || empty($this->consumer_key) || empty($this->consumer_secret)) {
             throw new Exception('Missing WooCommerce credentials');
@@ -238,5 +281,49 @@ class WebhookHandler {
     private function log_error($error_message) {
         error_log("FastCheckout Webhook Error: {$error_message}");
     }
+
+    /**
+     * Get user agent with sanitization
+     */
+    private function get_user_agent(WP_REST_Request $request) {
+        $user_agent = $request->get_header('user-agent') ?: ($_SERVER['HTTP_USER_AGENT'] ?? '');
+        
+        // Sanitize user agent to prevent log injection
+        return sanitize_text_field($user_agent);
+    }
+
+    private function get_user_ip(WP_REST_Request $request) {
+        // Check for IP from various headers in order of preference
+        $ip_headers = [
+            'HTTP_CF_CONNECTING_IP',     // Cloudflare
+            'HTTP_X_FORWARDED_FOR',      // Load balancer/proxy
+            'HTTP_X_FORWARDED',          // Proxy
+            'HTTP_X_CLUSTER_CLIENT_IP',  // Cluster
+            'HTTP_CLIENT_IP',            // Shared internet
+            'HTTP_FORWARDED_FOR',        // Proxy
+            'HTTP_FORWARDED',            // Proxy
+            'REMOTE_ADDR'                // Standard
+        ];
+        
+        foreach ($ip_headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ip = $_SERVER[$header];
+                
+                // Handle comma-separated IPs (X-Forwarded-For can contain multiple IPs)
+                if (strpos($ip, ',') !== false) {
+                    $ip = trim(explode(',', $ip)[0]);
+                }
+                
+                // Validate IP
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $ip;
+                }
+            }
+        }
+    
+        // Fallback to REMOTE_ADDR if no valid public IP found
+        return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    }
+
 }
 
