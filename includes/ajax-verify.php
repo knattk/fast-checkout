@@ -3,23 +3,24 @@
 /**
  * Enqueue JavaScript and localize script data.
  */
+
 add_action( 'wp_enqueue_scripts', 'order_limit_enqueue_scripts' );
 add_action( 'admin_enqueue_scripts', 'order_limit_enqueue_scripts' );
 
 function order_limit_enqueue_scripts() {
 
-    wp_register_script('order-limit-js',FAST_CHECKOUT_URL . 'assets/js/order-limit.js',[],FAST_CHECKOUT_VERSION,true
+    wp_register_script('ajax-verify-js',FAST_CHECKOUT_URL . 'assets/js/ajax-verify.js',[],FAST_CHECKOUT_VERSION,true
         );
 
     // Localize the script with the AJAX URL and a nonce for security.
-    wp_localize_script( 'order-limit-js','userOrderLimitVerify',
+    wp_localize_script( 'ajax-verify-js','ajaxVerifyLimit',
         array(
             'ajax_url' => admin_url( 'admin-ajax.php' ),
             'nonce'    => wp_create_nonce( 'order_limit_nonce' ),
         )
     );
     // Enqueue the script.
-    wp_enqueue_script( 'order-limit-js' );
+    wp_enqueue_script( 'ajax-verify-js' );
 
 }
 
@@ -41,16 +42,18 @@ function order_limit_ajax_handler() {
     }
 
     $transient_key = 'fast_checkout_user_' . md5($user_ip);
-    $is_ip_timeout = get_transient($transient_key);
+    $is_not_timeout = get_transient($transient_key);
 
-    if (false === $is_ip_timeout) {
+    // 
+    if ($is_not_timeout) {
+        $fallback_html = get_option('fast_checkout_illigible_user_fallback');
         wp_send_json_success([
-            'status' => false,
-            'message' => 'IP not found or timed out. Transient set.'
+            'status' => true,
+            'message' =>  wp_kses_post($fallback_html) ,
         ]);
     } else {
         wp_send_json_success([
-            'status' => true,
+            'status' => false,
             'message' => 'IP found in transient and is not timed out.'
         ]);
     }

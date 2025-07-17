@@ -49,16 +49,13 @@ class WebhookHandler {
             }
 
             // Check illigible user
-            // $user_ip = $data['user_ip'] ?? null;
-            // $transient_key = 'fast_checkout_user_' . md5($user_ip);
-            // $is_user_exit = get_transient($transient_key);
+            $user_ip = $data['user_ip'] ?? null;
+            $transient_key = 'fast_checkout_user_' . md5($user_ip);
+            $is_not_timeout = get_transient($transient_key);
 
-            // if (false === $is_user_exit) {
-                
-            // } else {
-               
-            // }
-
+            if ($is_not_timeout) {
+                return new WP_REST_Response(['error' => 'Illigible user: You’re on cooldown — please try again later.'], 403);
+            } 
 
 
             file_put_contents(

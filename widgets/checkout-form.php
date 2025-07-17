@@ -83,14 +83,16 @@ class Checkout_Form_Widget extends Widget_Base {
             'default' => 0,
         ]);
 
-
-        $this->add_control('limit_html_fallback', [
-            'label' => esc_html__('Show is for illigible user', 'fast-checkout'),
-            'type' => Controls_Manager::CODE,
-            'raw' => esc_html__( 'A very important message to show in the panel.', 'textdomain' ),
-            'language' => 'html',
-            'rows' => 20,
-        ]);
+        $this->add_control(
+			'limit_timeout_notice',
+			[
+				'type' => \Elementor\Controls_Manager::NOTICE,
+				'notice_type' => 'warning',
+				'dismissible' => true,
+				'heading' => esc_html__( 'Notice!', 'textdomain' ),
+				'content' => esc_html__( 'ตั้งค่า Fallback สำหรับผู้ที่ไม่มีสิทธิ์สั่งซื้อได้ที่ Settings > Fast Checkout', 'textdomain' ),
+			]
+		);
 
 
         $this->end_controls_section();
@@ -487,8 +489,6 @@ class Checkout_Form_Widget extends Widget_Base {
 		}
         
         ?>
-        
-
             <div class="form_fallback">
                 <?php echo $settings['limit_html_fallback'] ?>
             </div>

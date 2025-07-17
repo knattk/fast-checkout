@@ -39,6 +39,9 @@ class Settings_Page {
         register_setting('fast_checkout_settings', 'fast_checkout_allowed_ips', [
             'sanitize_callback' => [$this, 'sanitize_ip_list']
         ]);
+        register_setting('fast_checkout_settings', 'fast_checkout_illigible_user_fallback', [
+            'sanitize_callback' => 'wp_kses_post'
+        ]);
 
         add_settings_section(
             'fast_checkout_section',
@@ -79,6 +82,14 @@ class Settings_Page {
             'fast_checkout_section'
         );
 
+        add_settings_field(
+            'fast_checkout_illigible_user_fallback',
+            'Fallback HTML (for blocked IPs)',
+            [$this, 'illigible_user_fallback_html'],
+            'fast_checkout_settings', // page slug
+            'fast_checkout_section' // section ID
+        );
+
     }
 
     public function store_url_field_html() {
@@ -101,6 +112,12 @@ class Settings_Page {
     public function allowed_ips_field_html() {
         $value = esc_attr(get_option('fast_checkout_allowed_ips'));
         echo "<input type='text' name='fast_checkout_allowed_ips' value='{$value}' size='50' placeholder='192.168.1.1, 10.0.0.1' />";
+    }
+
+
+    public function illigible_user_fallback_html() {
+        $value = (get_option('fast_checkout_illigible_user_fallback'));
+        echo '<textarea name="fast_checkout_illigible_user_fallback" rows="6" style="width: 600px">' . esc_textarea($value) . '</textarea>';
     }
 
     public function sanitize_ip_list($value) {
