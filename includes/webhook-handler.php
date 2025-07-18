@@ -29,23 +29,22 @@ class WebhookHandler {
     
     public function handle_webhook(WP_REST_Request $request) {
         try {
-            // Validate request
-            $validation_result = $this->validate_request($request);
-            if (is_wp_error($validation_result)) {
-                return $validation_result;
-            }
             
             // Parse request data
             $data = $this->parse_request_data($request);
             $this->log_webhook_data($request, $data);
             
 
-            
+            // Validate request
+            // $validation_result = $this->validate_request($request);
+            // if (is_wp_error($validation_result)) {
+            //     return new WP_REST_Response(['error' => 'Unauthorized.'], 401);
+            // }
 
             // Check nouce
             $nonce = $data['fast_checkout_nonce'] ?? null;
             if (! $nonce || ! wp_verify_nonce($nonce, 'fast_checkout_nonce_action')) {
-                return new \WP_REST_Response(['error' => 'Invalid nonce'], 403);
+                return new WP_REST_Response(['error' => 'Invalid nonce'], 403);
             }
 
             // Check illigible user
@@ -78,16 +77,19 @@ class WebhookHandler {
             $this->log_error($e->getMessage());
             return new WP_REST_Response(['error' => $e->getMessage()], 500);
         }
+
     }
     
     // Store user log with wp transient to support order limit per user
     private function set_db_transient_key($order_data) {
+
             // Get IP address
             $ip_address = $order_data['user_ip'] ?? null;
             $limit_timeout_hours = (int) ($order_data['limit_timeout_hours'] ?? 72);
             $user_agent = $order_data['user_agent'] ?? null;
             $user_phone = !empty($order_data['fields']['billing_phone']['value']) ? md5(trim($order_data['fields']['billing_phone']['value'])) : null;
             $user_email = !empty($order_data['fields']['billing_email']['value']) ? md5(trim($order_data['fields']['billing_email']['value'])) : null;
+            
             // Generate transient key
             $transient_key = 'fast_checkout_user_' .  md5($ip_address); //md5($ip_address)
             $transient_data = [
@@ -102,12 +104,14 @@ class WebhookHandler {
                 error_log('Fast Checkout: Missing IP address for transient key.');
                 return;
             }
+
             // Save IP and timestamp in transient for 24 hours
 	        set_transient( $transient_key, $transient_data, $limit_timeout_hours * HOUR_IN_SECONDS );
     }
 
     // validate IP
     private function validate_request(WP_REST_Request $request) {
+
         if (empty($this->allowed_ips)) {
             return true; // Skip validation if no IPs configured
         }
@@ -120,6 +124,7 @@ class WebhookHandler {
         }
         
         return true;
+
     }
     
     // parse data
@@ -261,18 +266,13 @@ class WebhookHandler {
             'decoded_response' => json_decode($response_body, true),
         ];
         
-        $log_path = WP_CONTENT_DIR . '/webhook.log';
+        $log_path = WP_CONTENT_DIR . '/woocommerce_response.log';
         if (is_writable(WP_CONTENT_DIR)) {
             file_put_contents($log_path, json_encode($log_data, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
         } else {
             error_log('FastCheckout: Cannot write to log file at ' . $log_path);
         }
 
-        // file_put_contents(
-        //     WP_CONTENT_DIR . '/webhook.log', 
-        //     json_encode($log_data, JSON_PRETTY_PRINT) . "\n", 
-        //     FILE_APPEND
-        // );
     }
     
     private function log_error($error_message) {

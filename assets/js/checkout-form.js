@@ -132,37 +132,6 @@
     /**
      * Handle form submission
      */
-    // async function handleFormSubmission(e) {
-    //     e.preventDefault();
-
-    //     const form = e.target;
-    //     const formData = buildFormData(form);
-
-    //     try {
-    //         const response = await fetch(window.fastCheckoutConfig.webhookUrl, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(formData),
-    //         });
-
-    //         const result = await response.json();
-
-    //         // console.log(result);
-
-    //         if (result && !result.error) {
-    //             showOrderConfirmation(result);
-    //         } else {
-    //             console.warn('Line API error:', result.error);
-    //         }
-    //     } catch (error) {
-    //         console.error('Form submission error:', error);
-    //         showErrorMessage(
-    //             'เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง'
-    //         );
-    //     }
-    // }
 
     async function handleFormSubmission(e) {
         e.preventDefault();
@@ -357,27 +326,28 @@
      * Show error message
      */
     function showErrorMessage(message) {
-        const errorHTML = `
-            <div class="fast-checkout-error-message">
-                <div class="error-content">
-                    <h3>เกิดข้อผิดพลาด</h3>
-                    <p>${message}</p>
-                    <button class="close-button">ปิด</button>
-                </div>
-            </div>
-        `;
+        alert(message);
+        // const errorHTML = `
+        //     <div class="fast-checkout-error-message">
+        //         <div class="error-content">
+        //             <h3>เกิดข้อผิดพลาด</h3>
+        //             <p>${message}</p>
+        //             <button class="close-button">ปิด</button>
+        //         </div>
+        //     </div>
+        // `;
 
-        const errorBox = document.createElement('div');
-        errorBox.innerHTML = errorHTML;
-        errorBox.className = 'fast-checkout-modal-overlay';
-        document.body.appendChild(errorBox);
+        // const errorBox = document.createElement('div');
+        // errorBox.innerHTML = errorHTML;
+        // errorBox.className = 'fast-checkout-modal-overlay';
+        // document.body.appendChild(errorBox);
 
         // Close button handler
-        errorBox
-            .querySelector('.close-button')
-            .addEventListener('click', () => {
-                errorBox.remove();
-            });
+        // errorBox
+        //     .querySelector('.close-button')
+        //     .addEventListener('click', () => {
+        //         errorBox.remove();
+        //     });
     }
 
     /**
