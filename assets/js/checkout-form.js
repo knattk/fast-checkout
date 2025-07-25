@@ -89,19 +89,6 @@
     } catch (error) {
         console.error('Phone field interaction error:', error);
     }
-
-    /* Submit button animation */
-    document
-        .querySelector('#fast-checkout-submit')
-        .addEventListener('click', function () {
-            const button = this;
-            button.classList.add('loading');
-
-            // Optionally disable the form temporarily
-            setTimeout(() => {
-                button.classList.remove('loading');
-            }, 3000);
-        });
 })();
 
 /**
@@ -111,6 +98,345 @@
 
 (function () {
     'use strict';
+
+    // Submission Protection Class
+    class FastCheckoutProtection {
+        constructor() {
+            this.isSubmitting = false;
+            this.lastSubmissionTime = 0;
+            this.minSubmissionInterval = 3000; // 3 seconds minimum between submissions
+            this.submitButton = null;
+            this.form = null;
+            this.messageContainer = null;
+        }
+
+        init(form, submitButton) {
+            this.form = form;
+            this.submitButton = submitButton;
+            this.createMessageContainer();
+        }
+
+        createMessageContainer() {
+            // Create message container at the top of the form
+            this.messageContainer = document.createElement('div');
+            this.messageContainer.className = 'fast-checkout-messages';
+            this.messageContainer.style.cssText = `
+                margin-bottom: 15px;
+                position: relative;
+                z-index: 1000;
+            `;
+
+            if (this.form) {
+                this.form.insertBefore(
+                    this.messageContainer,
+                    this.form.firstChild
+                );
+            }
+        }
+
+        canSubmit() {
+            const currentTime = Date.now();
+
+            // Check if already submitting
+            if (this.isSubmitting) {
+                this.showMessage(
+                    'กำลังประมวลผลคำสั่งซื้อของคุณ กรุณารอสักครู่...',
+                    'warning'
+                );
+                return false;
+            }
+
+            // Check minimum time interval
+            if (
+                currentTime - this.lastSubmissionTime <
+                this.minSubmissionInterval
+            ) {
+                this.showMessage(
+                    'กรุณารอสักครู่ก่อนส่งข้อมูลอีกครั้ง',
+                    'warning'
+                );
+                return false;
+            }
+
+            // Check for duplicate submission
+            if (this.checkDuplicateSubmission()) {
+                this.showMessage(
+                    'ข้อมูลนี้เพิ่งถูกส่งไปแล้ว กรุณารอสักครู่',
+                    'warning'
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+        startSubmission() {
+            this.isSubmitting = true;
+            this.lastSubmissionTime = Date.now();
+            this.disableSubmitButton();
+            this.storeFormSignature();
+            this.showMessage('กำลังประมวลผลคำสั่งซื้อ...', 'info');
+        }
+
+        onSuccess() {
+            this.showMessage('คำสั่งซื้อสำเร็จ!', 'success');
+            // Don't reset immediately on success - let the confirmation modal handle it
+        }
+
+        onError(errorMessage = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง') {
+            this.showMessage(errorMessage, 'error');
+            this.resetSubmissionState();
+        }
+
+        resetSubmissionState() {
+            this.isSubmitting = false;
+            this.enableSubmitButton();
+        }
+
+        disableSubmitButton() {
+            if (!this.submitButton) return;
+
+            this.submitButton.disabled = true;
+            this.submitButton.style.opacity = '0.6';
+            this.submitButton.style.cursor = 'not-allowed';
+            this.submitButton.classList.add('loading');
+
+            // Store original text
+            if (!this.submitButton.dataset.originalText) {
+                this.submitButton.dataset.originalText =
+                    this.submitButton.value || this.submitButton.textContent;
+            }
+
+            // Update button text
+            if (this.submitButton.tagName === 'INPUT') {
+                this.submitButton.value = 'กำลังประมวลผล...';
+            } else {
+                this.submitButton.textContent = 'กำลังประมวลผล...';
+            }
+        }
+
+        enableSubmitButton() {
+            if (!this.submitButton) return;
+
+            this.submitButton.disabled = false;
+            this.submitButton.style.opacity = '1';
+            this.submitButton.style.cursor = 'pointer';
+            this.submitButton.classList.remove('loading');
+
+            // Restore original text
+            if (this.submitButton.dataset.originalText) {
+                if (this.submitButton.tagName === 'INPUT') {
+                    this.submitButton.value =
+                        this.submitButton.dataset.originalText;
+                } else {
+                    this.submitButton.textContent =
+                        this.submitButton.dataset.originalText;
+                }
+            }
+        }
+
+        storeFormSignature() {
+            if (!this.form) return;
+
+            const formData = new FormData(this.form);
+            const signature = Array.from(formData.entries())
+                .filter(([key, value]) => key !== 'fast_checkout_nonce') // Exclude nonce from signature
+                .map(([key, value]) => `${key}=${value}`)
+                .join('&');
+
+            const signatureHash = this.hashString(signature);
+
+            try {
+                localStorage.setItem(
+                    'fast_checkout_last_submission',
+                    JSON.stringify({
+                        signature: signatureHash,
+                        timestamp: Date.now(),
+                    })
+                );
+            } catch (e) {
+                console.warn(
+                    'Could not store form signature in localStorage:',
+                    e
+                );
+            }
+        }
+
+        checkDuplicateSubmission() {
+            if (!this.form) return false;
+
+            try {
+                const stored = localStorage.getItem(
+                    'fast_checkout_last_submission'
+                );
+                if (!stored) return false;
+
+                const data = JSON.parse(stored);
+                const currentSignature = this.getFormSignature();
+
+                // Check if same form submitted within last 60 seconds
+                if (
+                    data.signature === currentSignature &&
+                    Date.now() - data.timestamp < 60000
+                ) {
+                    return true;
+                }
+            } catch (e) {
+                // Invalid stored data, clear it
+                localStorage.removeItem('fast_checkout_last_submission');
+            }
+
+            return false;
+        }
+
+        getFormSignature() {
+            if (!this.form) return '';
+
+            const formData = new FormData(this.form);
+            const signature = Array.from(formData.entries())
+                .filter(([key, value]) => key !== 'fast_checkout_nonce')
+                .map(([key, value]) => `${key}=${value}`)
+                .join('&');
+
+            return this.hashString(signature);
+        }
+
+        hashString(str) {
+            let hash = 0;
+            if (str.length === 0) return hash;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = (hash << 5) - hash + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            return Math.abs(hash).toString(36);
+        }
+
+        showMessage(message, type = 'info') {
+            if (!this.messageContainer) return;
+
+            // Remove existing messages of the same type
+            const existingMessages = this.messageContainer.querySelectorAll(
+                `.fast-checkout-message.${type}`
+            );
+            existingMessages.forEach((msg) => msg.remove());
+
+            // Create message element
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fast-checkout-message fast-checkout-${type}`;
+            messageDiv.textContent = message;
+
+            // Style the message
+            messageDiv.style.cssText = `
+                padding: 12px 16px;
+                margin-bottom: 10px;
+                border-radius: 6px;
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 1.4;
+                position: relative;
+                animation: slideIn 0.3s ease-out;
+                ${this.getMessageStyles(type)}
+            `;
+
+            // Add close button for persistent messages
+            if (type === 'error' || type === 'warning') {
+                const closeBtn = document.createElement('button');
+                closeBtn.innerHTML = '×';
+                closeBtn.style.cssText = `
+                    position: absolute;
+                    right: 8px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    font-size: 18px;
+                    cursor: pointer;
+                    color: inherit;
+                    opacity: 0.7;
+                `;
+                closeBtn.addEventListener('click', () => messageDiv.remove());
+                messageDiv.appendChild(closeBtn);
+            }
+
+            // Insert message
+            this.messageContainer.appendChild(messageDiv);
+
+            // Auto-remove after delay for non-error messages
+            if (type !== 'error') {
+                setTimeout(
+                    () => {
+                        if (messageDiv.parentNode) {
+                            messageDiv.style.animation =
+                                'slideOut 0.3s ease-in';
+                            setTimeout(() => messageDiv.remove(), 300);
+                        }
+                    },
+                    type === 'success' ? 3000 : 5000
+                );
+            }
+
+            // Add animation styles if not already present
+            this.addAnimationStyles();
+        }
+
+        getMessageStyles(type) {
+            const styles = {
+                info: 'background-color: #e3f2fd; color: #1565c0; border-left: 4px solid #2196f3;',
+                warning:
+                    'background-color: #fff8e1; color: #f57c00; border-left: 4px solid #ff9800;',
+                error: 'background-color: #ffebee; color: #c62828; border-left: 4px solid #f44336;',
+                success:
+                    'background-color: #e8f5e8; color: #2e7d32; border-left: 4px solid #4caf50;',
+            };
+
+            return styles[type] || styles['info'];
+        }
+
+        addAnimationStyles() {
+            if (document.getElementById('fast-checkout-animations')) return;
+
+            const style = document.createElement('style');
+            style.id = 'fast-checkout-animations';
+            style.textContent = `
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes slideOut {
+                    from {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                    to {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Auto-reset after timeout (fallback)
+        setAutoReset() {
+            setTimeout(() => {
+                if (this.isSubmitting) {
+                    this.onError(
+                        'การประมวลผลใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง'
+                    );
+                }
+            }, 30000); // 30 seconds timeout
+        }
+    }
+
+    // Create global protection instance
+    const protection = new FastCheckoutProtection();
 
     // Wait for DOM to be ready
     document.addEventListener('DOMContentLoaded', function () {
@@ -124,17 +450,39 @@
      */
     function initializeCheckoutForm() {
         const form = document.getElementById('fast-checkout_form');
-        if (!form) return;
+        const submitButton = document.getElementById('fast-checkout-submit');
+
+        if (!form || !submitButton) return;
+
+        // Initialize protection
+        protection.init(form, submitButton);
+
+        // Enhanced submit button click handler
+        submitButton.addEventListener('click', function (e) {
+            // Check if we can submit
+            if (!protection.canSubmit()) {
+                e.preventDefault();
+                return false;
+            }
+        });
 
         form.addEventListener('submit', handleFormSubmission);
     }
 
     /**
-     * Handle form submission
+     * Handle form submission with protection
      */
-
     async function handleFormSubmission(e) {
         e.preventDefault();
+
+        // Final protection check
+        if (!protection.canSubmit()) {
+            return false;
+        }
+
+        // Start submission protection
+        protection.startSubmission();
+        protection.setAutoReset();
 
         const form = e.target;
         const formData = buildFormData(form);
@@ -144,6 +492,8 @@
         Object.assign(formData, securityData);
 
         try {
+            console.log('Submitting form data:', formData); // Debug log
+
             const response = await fetch(window.fastCheckoutConfig.webhookUrl, {
                 method: 'POST',
                 headers: {
@@ -152,18 +502,73 @@
                 body: JSON.stringify(formData),
             });
 
-            const result = await response.json();
+            console.log('Response status:', response.status); // Debug log
+            console.log(
+                'Response headers:',
+                Object.fromEntries(response.headers.entries())
+            ); // Debug log
+
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Get response text first to check if it's empty
+            const responseText = await response.text();
+            console.log('Response text:', responseText); // Debug log
+
+            if (!responseText) {
+                throw new Error('Empty response from server');
+            }
+
+            // Try to parse JSON
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (jsonError) {
+                console.error('JSON parsing error:', jsonError);
+                console.error(
+                    'Response text that failed to parse:',
+                    responseText
+                );
+                throw new Error('Invalid JSON response from server');
+            }
+
+            console.log('Parsed result:', result); // Debug log
 
             if (result && !result.error) {
+                protection.onSuccess();
                 showOrderConfirmation(result);
+                // Form will be reset when modal is closed
             } else {
-                console.warn('API error:', result.error);
+                const errorMsg = result?.error || 'เกิดข้อผิดพลาดในการประมวลผล';
+                protection.onError(errorMsg);
+                console.warn('API error:', result?.error);
             }
         } catch (error) {
             console.error('Form submission error:', error);
-            showErrorMessage(
-                'เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง'
-            );
+
+            // Provide more specific error messages
+            let errorMessage = 'เกิดข้อผิดพลาดในการส่งข้อมูล';
+
+            if (error.message.includes('HTTP error')) {
+                errorMessage =
+                    'เซิร์ฟเวอร์ตอบกลับด้วยข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+            } else if (error.message.includes('Empty response')) {
+                errorMessage =
+                    'ไม่ได้รับการตอบกลับจากเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง';
+            } else if (error.message.includes('Invalid JSON')) {
+                errorMessage =
+                    'ข้อมูลที่ได้รับจากเซิร์ฟเวอร์ไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ';
+            } else if (
+                error.name === 'TypeError' &&
+                error.message.includes('fetch')
+            ) {
+                errorMessage =
+                    'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต';
+            }
+
+            protection.onError(errorMessage);
         }
     }
 
@@ -242,7 +647,7 @@
     }
 
     /**
-     * Show order confirmation modal
+     * Show order confirmation by replacing form content
      */
     function showOrderConfirmation(result) {
         const {
@@ -263,6 +668,12 @@
             payment_method_title,
         } = result;
 
+        const form = document.getElementById('fast-checkout_form');
+        if (!form) return;
+
+        // Store original form content for potential restoration
+        const originalFormContent = form.innerHTML;
+
         const confirmationHTML = `
             <div class="fast-checkout-order-confirmation">
                 <div class="confirm-heading">
@@ -270,55 +681,157 @@
                     <h3>สั่งซื้อสำเร็จ</h3>
                 </div>
                 <div class="confirm-email">
-                    รายละเอียดคำสั่งซื้อจะถูกส่งไปที่อีเมล <span>${email}</span>
+                    รายละเอียดคำสั่งซื้อจะถูกส่งไปที่อีเมล <strong>${email}</strong>
                 </div>
                 <div class="confirm-details">
                     <h4>รายละเอียดคำสั่งซื้อ</h4>
-                    <ul>
-                        <li><strong>หมายเลขออเดอร์:</strong> ${id}</li>
-                        <li><strong>ยอดหลังหักส่วนลด:</strong> ${total} ${currency_symbol}</li>
-                        <li><strong>ช่องทางชำระเงิน:</strong> ${payment_method_title}</li>
-                    </ul>
+                    <div class="details">
+                        <p><strong>หมายเลขออเดอร์:</strong> #${id}</p>
+                        <p><strong>ยอดรวม:</strong> ${total} ${currency_symbol}</p>
+                        <p><strong>ช่องทางชำระเงิน:</strong> ${payment_method_title}</p>
+                    </div>
                 </div>
                 <div class="confirm-details">
                     <h4>ที่อยู่จัดส่งสินค้า</h4>
-                    <ul>
-                        <li><strong>ชื่อ-สกุล:</strong> ${first_name} ${last_name}</li>
-                        <li><strong>เบอร์ติดต่อ:</strong> ${phone}</li>
-                        <li><strong>อีเมล:</strong> ${email}</li>
-                        <li><strong>ที่อยู่:</strong> ${address_1}, ${address_2}, ${city}, ${postcode}</li>
-                    </ul>
+                    <div class="address-info">
+                        <p><strong>ชื่อ-สกุล:</strong> ${first_name} ${last_name}</p>
+                        <p><strong>เบอร์ติดต่อ:</strong> ${phone}</p>
+                        <p><strong>อีเมล:</strong> ${email}</p>
+                        <p><strong>ที่อยู่:</strong> ${address_1}${
+            address_2 ? ', ' + address_2 : ''
+        }, ${city}, ${postcode}</p>
+                    </div>
                 </div>
-                <button class="close-button" aria-label="ปิด">×</button>
+                <div class="confirmation-actions">
+                    <button type="button" class="btn-save-image">บันทึกคำสั่งซื้อ</button>
+                    <button type="button" class="btn-new-order">สั่งซื้อใหม่</button>
+                </div>
             </div>
-
-           
         `;
 
-        const orderConfirmationBox = document.createElement('div');
-        orderConfirmationBox.innerHTML = confirmationHTML;
-        orderConfirmationBox.className = 'fast-checkout-modal-overlay';
-        document.body.appendChild(orderConfirmationBox);
+        // Replace form content with confirmation
+        form.innerHTML = confirmationHTML;
+        form.classList.add('confirmation-mode');
 
-        // Close button handler
-        const closeBtn = orderConfirmationBox.querySelector('.close-button');
-        closeBtn.addEventListener('click', () => {
-            orderConfirmationBox.remove();
-        });
+        // Scroll to top of form smoothly
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        // Close on overlay click
-        orderConfirmationBox.addEventListener('click', (e) => {
-            if (e.target === orderConfirmationBox) {
-                orderConfirmationBox.remove();
+        // Handle save as image button
+        const saveImageBtn = form.querySelector('.btn-save-image');
+        if (saveImageBtn) {
+            saveImageBtn.addEventListener('click', () => {
+                saveConfirmationAsImage(
+                    form.querySelector('.fast-checkout-order-confirmation')
+                );
+            });
+        }
+        const newOrderBtn = form.querySelector('.btn-new-order');
+        if (newOrderBtn) {
+            newOrderBtn.addEventListener('click', () => {
+                // Restore original form content
+                // form.innerHTML = originalFormContent;
+                // form.classList.remove('confirmation-mode');
+
+                // Reset protection state
+                protection.resetSubmissionState();
+
+                // Re-initialize form (since we replaced the HTML)
+                // setTimeout(() => {
+                //     initializeCheckoutForm();
+                //     initializeThailandAddress();
+                //     initializeAddressToggle();
+                // }, 100);
+                window.location.reload();
+                // Scroll back to form
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
+    }
+
+    /**
+     * Save confirmation as image using html2canvas
+     */
+    async function saveConfirmationAsImage(confirmationElement) {
+        try {
+            // Load html2canvas library if not already loaded
+            if (typeof html2canvas === 'undefined') {
+                await loadHtml2Canvas();
             }
-        });
 
-        // Close on escape key
-        document.addEventListener('keydown', function escapeHandler(e) {
-            if (e.key === 'Escape') {
-                orderConfirmationBox.remove();
-                document.removeEventListener('keydown', escapeHandler);
+            // Hide buttons temporarily for clean screenshot
+            const actionsDiv = confirmationElement.querySelector(
+                '.confirmation-actions'
+            );
+            const originalDisplay = actionsDiv.style.display;
+            actionsDiv.style.display = 'none';
+
+            // Generate canvas from the confirmation element
+            const canvas = await html2canvas(confirmationElement, {
+                backgroundColor: '#ffffff',
+                scale: 2, // Higher quality
+                useCORS: true,
+                allowTaint: true,
+                height: confirmationElement.scrollHeight,
+                width: confirmationElement.scrollWidth,
+                scrollX: 0,
+                scrollY: 0,
+            });
+
+            // Restore buttons
+            actionsDiv.style.display = originalDisplay;
+
+            // Convert canvas to blob
+            canvas.toBlob((blob) => {
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+
+                // Get order ID for filename
+                const orderIdElement = confirmationElement.querySelector(
+                    '.details p:first-child'
+                );
+                const orderId = orderIdElement
+                    ? orderIdElement.textContent.match(/#(\d+)/)?.[1] || 'order'
+                    : 'order';
+
+                link.download = `order-confirmation-${orderId}-${new Date().getTime()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                // Show success message
+                protection.showMessage(
+                    'บันทึกคำสั่งซื้อเรียบร้อยแล้ว',
+                    'success'
+                );
+            }, 'image/png');
+        } catch (error) {
+            console.error('Error saving image:', error);
+            protection.showMessage(
+                'ไม่สามารถบันทึกภาพได้ กรุณาลองใหม่อีกครั้ง',
+                'error'
+            );
+        }
+    }
+
+    /**
+     * Load html2canvas library dynamically
+     */
+    function loadHtml2Canvas() {
+        return new Promise((resolve, reject) => {
+            if (typeof html2canvas !== 'undefined') {
+                resolve();
+                return;
             }
+
+            const script = document.createElement('script');
+            script.src =
+                'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
         });
     }
 
@@ -326,28 +839,7 @@
      * Show error message
      */
     function showErrorMessage(message) {
-        alert(message);
-        // const errorHTML = `
-        //     <div class="fast-checkout-error-message">
-        //         <div class="error-content">
-        //             <h3>เกิดข้อผิดพลาด</h3>
-        //             <p>${message}</p>
-        //             <button class="close-button">ปิด</button>
-        //         </div>
-        //     </div>
-        // `;
-
-        // const errorBox = document.createElement('div');
-        // errorBox.innerHTML = errorHTML;
-        // errorBox.className = 'fast-checkout-modal-overlay';
-        // document.body.appendChild(errorBox);
-
-        // Close button handler
-        // errorBox
-        //     .querySelector('.close-button')
-        //     .addEventListener('click', () => {
-        //         errorBox.remove();
-        //     });
+        protection.onError(message);
     }
 
     /**
@@ -408,4 +900,7 @@
         // Listen for input changes
         zipcode.addEventListener('input', toggleAddressFields);
     }
+
+    // Expose protection instance globally for debugging
+    window.fastCheckoutProtection = protection;
 })();

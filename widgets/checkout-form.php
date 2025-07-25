@@ -301,21 +301,21 @@ class Checkout_Form_Widget extends Widget_Base {
             <input type="hidden" name="product_id">
 
             <label for="billing_first_name">ชื่อ - สกุล</label>
-            <input type="text" name="billing_first_name" id="billing_first_name" required value="ชื่อทดสอบ นามสกุลปลอม">
+            <input type="text" name="billing_first_name" id="billing_first_name" required placeholder="ชื่อ - สกุล">
 
             <div id="billing_phone_group">
                 <label for="billing_phone">เบอร์โทร</label>
-                <input type="tel" name="billing_phone" id="billing_phone" required value="0999999999" placeholder="เบอร์โทร">
+                <input type="tel" name="billing_phone" id="billing_phone" required placeholder="เบอร์โทร">
             </div>
 
             <div id="billing_email_group">
                 <label for="billing_email">อีเมล</label>
-                <input type="email" name="billing_email" id="billing_email" required value="nattakanc@mindedge.co.th" placeholder="อีเมลรับอัพเดทสถานะสั่งซื้อ">
+                <input type="email" name="billing_email" id="billing_email" required placeholder="อีเมลรับอัพเดทสถานะสั่งซื้อ">
             </div>
 
             <div id="billing_address_1_group">
                 <label for="billing_address_1">บ้านเลขที่ / ซอย / ถนน</label>
-                <input type="text" name="billing_address_1" id="billing_address_1" required value="111" placeholder="บ้านเลขที่ / ซอย / ถนน">
+                <input type="text" name="billing_address_1" id="billing_address_1" required placeholder="บ้านเลขที่ / ซอย / ถนน">
             </div>
 
             <div id="billing_postcode_group">

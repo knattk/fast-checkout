@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
 }
+.fast-checkout_form .confirmation-mode .fast-checkout-order-confirmation {
+  margin: auto auto 0 auto;
+}
 .fast-checkout_form .order-limit-warning {
   min-height: 200px;
   display: flex;
@@ -58,7 +61,7 @@
 }
 .fast-checkout_form .payment legend {
   color: #3b4048;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 .fast-checkout_form .payment label {
   font-weight: bold;
@@ -105,6 +108,7 @@
   border-radius: 10px;
   border: 1px solid #ddd;
   overflow: hidden;
+  margin-top: 0.25rem;
 }
 .fast-checkout_form .payment-method .payment-type {
   padding: 0.5rem 0.65rem;
@@ -255,13 +259,16 @@
   text-align: center;
   background: #f3faf3 !important;
   border: 1px dashed #b4d3ba;
-  padding: 1rem !important;
+  padding: 0.5rem 1rem !important;
 }
 .fast-checkout-order-confirmation .confirm-email span {
   color: #439d56;
 }
+.fast-checkout-order-confirmation .confirm-details p {
+  margin: 0;
+}
 .fast-checkout-order-confirmation [class^=confirm-]:not(.confirm-heading) {
-  padding: 1.5rem 1rem;
+  padding: 1rem 1rem 0.5rem;
   background: #f7f8f9;
   border-radius: 10px;
   margin: 0.5rem 0;
@@ -366,6 +373,156 @@
 }
 .ajax-fallback .footer-box {
   margin-top: 2rem;
+}
+
+.fast-checkout-order-confirmation {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Responsive design */
+  /* Print styles */
+}
+.fast-checkout-order-confirmation .confirm-heading {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e8f5e8;
+}
+.fast-checkout-order-confirmation .confirm-heading svg {
+  margin-bottom: 15px;
+  animation: checkmarkBounce 0.6s ease-out;
+}
+.fast-checkout-order-confirmation .confirm-heading h3 {
+  color: #2e7d32;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+}
+.fast-checkout-order-confirmation .confirm-email {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 15px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #439d56;
+  font-size: 16px;
+  color: #439d56;
+}
+.fast-checkout-order-confirmation .confirm-details {
+  margin-bottom: 25px;
+}
+.fast-checkout-order-confirmation .confirm-details h4 {
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+.fast-checkout-order-confirmation .details p {
+  margin: 10px 0;
+  line-height: 1.6;
+  color: #555;
+  font-size: 15px;
+}
+.fast-checkout-order-confirmation .details strong {
+  color: #333;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 140px;
+}
+.fast-checkout-order-confirmation .address-info p {
+  margin: 8px 0;
+  line-height: 1.5;
+  color: #555;
+}
+.fast-checkout-order-confirmation .address-info strong {
+  color: #333;
+  font-weight: 600;
+}
+.fast-checkout-order-confirmation .confirmation-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 1rem;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+.fast-checkout-order-confirmation .confirmation-actions button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+.fast-checkout-order-confirmation .btn-new-order {
+  background: #4caf50;
+  color: white;
+}
+.fast-checkout-order-confirmation .btn-new-order:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+.fast-checkout-order-confirmation .btn-save-image {
+  background: #eaeaea;
+  color: #777;
+}
+.fast-checkout-order-confirmation .btn-save-image:hover {
+  background: #3b854a;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 133, 74, 0.062745098);
+}
+@keyframes checkmarkBounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@media (max-width: 600px) {
+  .fast-checkout-order-confirmation .fast-checkout-order-confirmation {
+    padding: 20px;
+    margin: 10px;
+  }
+  .fast-checkout-order-confirmation .confirm-heading h3 {
+    font-size: 24px;
+  }
+  .fast-checkout-order-confirmation .confirmation-actions {
+    flex-direction: column;
+  }
+  .fast-checkout-order-confirmation .confirmation-actions button {
+    width: 100%;
+  }
+  .fast-checkout-order-confirmation .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+@media print {
+  .fast-checkout-order-confirmation .confirmation-actions {
+    display: none;
+  }
+  .fast-checkout-order-confirmation .fast-checkout-order-confirmation {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
 }
 
 /*# sourceMappingURL=checkout-form.css.map */
