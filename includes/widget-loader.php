@@ -32,17 +32,62 @@ class Widget_Loader {
 		$widgets_manager->register( new \FastCheckout\Checkout_Form_Widget() );
 	}
 
+	public function localize_checkout_config() {
+		// Only if our JS handle is registered
+		if ( ! wp_script_is( 'fast-cart-checkout-form', 'registered' ) ) {
+			return;
+		}
+
+	
+		wp_localize_script( 'fast-cart-checkout-form', 'FC_Config', [
+			
+			'rest_base' => esc_url_raw( rest_url( 'fc/v1/' ) ),
+			'wp_nonce'  => wp_create_nonce( 'wp_rest' ),   // for logged-in (X-WP-Nonce)
+			'csrf'      => wp_create_nonce( 'fc_public' ), // for guests
+			'endpoints' => [
+				'otp_request'  => 'otp/request',
+				'otp_verify'   => 'otp/verify',
+				'order_create' => 'order/create',
+				],
+			]
+
+		);
+
+
+		wp_localize_script(
+			'fast-checkout-otp',
+			'ajax_otp_handler_script',
+			[
+				'ajax_url'      => admin_url('admin-ajax.php'),
+				'nonce'         => wp_create_nonce('otp_verify_nonce_action'),
+				'action_send'   => 'otp_send',   // ชื่อ action ฝั่ง PHP
+				'action_verify' => 'otp_verify', // ชื่อ action ฝั่ง PHP
+			]
+		);
+	}
+
+	
+
 	public function widget_styles() {
 		wp_register_style('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/css/product-card.css',[],FAST_CHECKOUT_VERSION);
 		wp_register_style('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/css/cart-summary.css',[],FAST_CHECKOUT_VERSION);
 		wp_register_style('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/css/checkout-form.css',[],FAST_CHECKOUT_VERSION);
+		wp_register_style('fast-checkout-popup',FAST_CHECKOUT_URL . 'assets/css/popup.css',[],FAST_CHECKOUT_VERSION);
 	}
 
 	public function widget_scripts() {
 		wp_register_script('fast-checkout-card',FAST_CHECKOUT_URL . 'assets/js/product-card.js',[],FAST_CHECKOUT_VERSION,true);
 		wp_register_script('fast-cart-summary',FAST_CHECKOUT_URL . 'assets/js/cart-summary.js',[],FAST_CHECKOUT_VERSION,true);
-		wp_register_script('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/js/checkout-form.js',[],FAST_CHECKOUT_VERSION,true);
+		wp_register_script('fast-checkout-popup',FAST_CHECKOUT_URL . 'assets/js/popup.js',[],FAST_CHECKOUT_VERSION,true);
+		wp_register_script('fast-checkout-otp',FAST_CHECKOUT_URL . 'assets/js/otp-controller.js',['fast-checkout-popup'],FAST_CHECKOUT_VERSION,true);
+		wp_register_script('fast-cart-checkout-form',FAST_CHECKOUT_URL . 'assets/js/checkout-form.js',['fast-checkout-popup'],FAST_CHECKOUT_VERSION,true);
+		
+
 		// wp_register_script('fast-cart-checkout-form_order-limit',FAST_CHECKOUT_URL . 'assets/js/order-limit.js',[],FAST_CHECKOUT_VERSION,true);
+
+
+		// Make REST config available to checkout-form.js
+		$this->localize_checkout_config();
 	}
 
 	

@@ -1,0 +1,32 @@
+<?php
+namespace FastCheckout\Rest;
+
+use FastCheckout\Services\OTP_Service;
+use FastCheckout\Services\Order_Service;
+
+if (!defined('ABSPATH')) exit;
+
+class Registrar {
+    /** @var Abstract_Controller[] */
+    private array $controllers = [];
+
+    public function __construct() {
+   
+        $otpService   = class_exists('\FastCheckout\Services\OTP_Service')   ? new \FastCheckout\Services\OTP_Service()   : null;
+        $orderService = class_exists('\FastCheckout\Services\Order_Service') ? new \FastCheckout\Services\Order_Service() : null;
+
+        // route classes
+        $this->controllers = array_filter([
+            $otpService   ? new Route_OTP($otpService)     : null,
+            $orderService ? new Route_Order($orderService) : null,
+        ]);
+
+        add_action('rest_api_init', [$this, 'register_all']);
+    }
+
+    public function register_all(): void {
+        foreach ($this->controllers as $controller) {
+            $controller->register_routes();
+        }
+    }
+}

@@ -30,12 +30,9 @@ class Checkout_Form_Widget extends Widget_Base {
     }
 
     public function get_script_depends() {
-        return ['fast-cart-checkout-form'];
+        return ['fast-checkout-popup', 'fast-checkout-otp', 'fast-cart-checkout-form' ];
     }
 
-    // public function get_script_depends(): array {
-	// 	return [ 'fast-cart-checkout-form', 'fast-cart-checkout-form_order-limit' ];
-	// }
 
     protected function _register_controls() {
         $this->register_form_controls();
@@ -271,14 +268,19 @@ class Checkout_Form_Widget extends Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
 
+        if (empty($settings)) {
+            return;
+        }
+
         $this->render_form_start();
         $this->render_billing_fields();
         $this->render_payment_methods($settings);
         $this->render_policy_fields($settings);
         $this->render_form_end();
         $this->render_thai_address_scripts();
-        $this->render_checkout_form_script();
         
+        require FAST_CHECKOUT_PATH . 'includes/templates/popup-container.php';
+
     }
 
 
@@ -288,7 +290,7 @@ class Checkout_Form_Widget extends Widget_Base {
     private function render_form_start() {
         ?>
         <form method="post" class="fast-checkout_form" id="fast-checkout_form">
-            <?php wp_nonce_field('fast_checkout_nonce_action', 'fast_checkout_nonce'); ?>
+            
         <?php
     }
 
@@ -301,41 +303,41 @@ class Checkout_Form_Widget extends Widget_Base {
             <input type="hidden" name="product_id">
 
             <label for="billing_first_name">ชื่อ - สกุล</label>
-            <input type="text" name="billing_first_name" id="billing_first_name" required placeholder="ชื่อ - สกุล">
+            <input type="text" name="billing_first_name" id="billing_first_name" required placeholder="ชื่อ - สกุล" value="1">
 
             <div id="billing_phone_group">
                 <label for="billing_phone">เบอร์โทร</label>
-                <input type="tel" name="billing_phone" id="billing_phone" required placeholder="เบอร์โทร">
+                <input type="tel" name="billing_phone" id="billing_phone" required placeholder="เบอร์โทร" value="0999999999">
             </div>
 
             <div id="billing_email_group">
                 <label for="billing_email">อีเมล</label>
-                <input type="email" name="billing_email" id="billing_email" required placeholder="อีเมลรับอัพเดทสถานะสั่งซื้อ">
+                <input type="email" name="billing_email" id="billing_email" required placeholder="อีเมลรับอัพเดทสถานะสั่งซื้อ" value="nattakanc@mindedge.co.th">
             </div>
 
             <div id="billing_address_1_group">
                 <label for="billing_address_1">บ้านเลขที่ / ซอย / ถนน</label>
-                <input type="text" name="billing_address_1" id="billing_address_1" required placeholder="บ้านเลขที่ / ซอย / ถนน">
+                <input type="text" name="billing_address_1" id="billing_address_1" required placeholder="บ้านเลขที่ / ซอย / ถนน" value="1">
             </div>
 
             <div id="billing_postcode_group">
                 <label for="billing_postcode">รหัสไปรษณีย์</label>
-                <input type="text" name="billing_postcode" id="billing_postcode" required placeholder="รหัสไปรษณีย์">
+                <input type="text" name="billing_postcode" id="billing_postcode" required placeholder="รหัสไปรษณีย์" value="10200">
             </div>
 
             <div id="billing_address_2_group">
                 <label for="billing_address_2">แขวง / ตำบล</label>
-                <input type="text" name="billing_address_2" id="billing_address_2" placeholder="แขวง/ตำบล">
+                <input type="text" name="billing_address_2" id="billing_address_2" placeholder="แขวง/ตำบล" value="1">
             </div>
 
             <div id="billing_city_group">
                 <label for="billing_city">เขต / อำเภอ</label>
-                <input type="text" name="billing_city" id="billing_city" required placeholder="เขต/อำเภอ">
+                <input type="text" name="billing_city" id="billing_city" required placeholder="เขต/อำเภอ" value="1">
             </div>
 
             <div id="billing_state_group">
                 <label for="billing_state">จังหวัด</label>
-                <input type="text" name="billing_state" id="billing_state" placeholder="จังหวัด">
+                <input type="text" name="billing_state" id="billing_state" placeholder="จังหวัด" value="1">
             </div>
 
         </fieldset>
@@ -509,20 +511,4 @@ class Checkout_Form_Widget extends Widget_Base {
         <script src="https://earthchie.github.io/jquery.Thailand.js/jquery.Thailand.js/dist/jquery.Thailand.min.js"></script>
         <?php
     }
-
-    /**
-     * Render checkout form script
-     */
-    private function render_checkout_form_script() {
-        $webhook_url = esc_url(rest_url("fast-checkout/v1/webhook"));
-        ?>
-        <script>
-            // Pass PHP data to JavaScript
-            window.fastCheckoutConfig = {
-                webhookUrl: '<?php echo $webhook_url; ?>'
-            };
-        </script>
-        <?php
-    }
-
 }

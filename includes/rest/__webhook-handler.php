@@ -4,14 +4,11 @@ namespace FastCheckout;
 use WP_REST_Request;
 use WP_REST_Response;
 
-if ( ! function_exists( 'FastCheckout\\get_state_code' ) || ! function_exists( 'FastCheckout\\get_payment_name') || ! function_exists( 'FastCheckout\\get_paid_status') || ! function_exists( 'FastCheckout\\get_order_status'  ) ) {
-    require_once plugin_dir_path( __FILE__ ) . '/woocommerce-utils.php';
-}
-if ( ! function_exists( 'FastCheckout\\fc_encrypt' ) || !function_exists( 'FastCheckout\\fc_decrypt' ) ) {
-    require_once plugin_dir_path( __FILE__ ) . '/utils.php';
-}
+require_once plugin_dir_path( __FILE__ ) . '../woocommerce-utils.php';
+require_once plugin_dir_path( __FILE__ ) . '../utils.php';
 
-class WebhookHandler {
+
+class Webhook_Handler {
     
     private $allowed_ips;
     private $store_url;

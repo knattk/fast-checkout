@@ -6,7 +6,7 @@ use Elementor\Controls_Manager;
 use Elementor\Repeater;
 
 if ( ! function_exists( __NAMESPACE__ . '\\fc_decrypt' ) ) {
-    require_once plugin_dir_path( __FILE__ ) . '/utils.php';
+    require_once plugin_dir_path( __FILE__ ) . '/helpers.php';
 }
 
 use function FastCheckout\fc_decrypt;

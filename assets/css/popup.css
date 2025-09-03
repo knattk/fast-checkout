@@ -1,0 +1,160 @@
+@charset "UTF-8";
+/* popup container */
+.fc-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  /* hidden state */
+}
+.fc-popup.hidden {
+  display: none;
+}
+
+/* background overlay */
+.fc-popup-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* dialog box */
+.fc-popup-dialog {
+  position: relative;
+  max-width: 400px;
+  margin: 10% auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  z-index: 10000;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* close button */
+.fc-popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* ===== OTP Card ===== */
+/* กล่อง OTP */
+.fc-otp-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 380px;
+  margin: 0 auto;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  font-family: "Prompt", system-ui, sans-serif;
+}
+
+.fc-otp-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.fc-otp-desc {
+  font-size: 14px;
+  color: #4b5563;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* ช่อง OTP */
+.fc-otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.fc-otp-digit {
+  width: 56px !important;
+  height: 64px;
+  font-size: 24px;
+  text-align: center;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  transition: all 0.15s ease;
+}
+.fc-otp-digit:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.fc-otp-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 8px 0;
+  display: none;
+}
+
+/* ปุ่ม */
+.fc-otp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.fc-otp-submit {
+  background: #2563eb;
+  color: #fff;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.fc-otp-submit:hover {
+  background: #1d4ed8;
+}
+
+.fc-otp-cancel {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ปุ่ม resend + timer */
+.fc-otp-meta {
+  margin-top: 10px;
+}
+
+.fc-otp-resend {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #2563eb;
+  transition: background 0.15s ease;
+}
+.fc-otp-resend:hover:not(:disabled) {
+  background: #e0e7ff;
+}
+.fc-otp-resend:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.fc-otp-timer {
+  font-variant-numeric: tabular-nums;
+}
+
+/*# sourceMappingURL=popup.css.map */
