@@ -39,8 +39,8 @@ abstract class Abstract_Controller {
             return true;
         }
 
-        // not logged in  -> check CSRF nonce from body/params
-        $csrf = $r->get_param('csrf');
+        // not logged in  -> check CSRF nonce from body/params or header
+        $csrf = $r->get_param('csrf') ?: $r->get_header('x-fc-csrf');
         if (!$csrf || !wp_verify_nonce($csrf, 'fc_public')) {
             return new \WP_Error('fc_csrf_fail', __('CSRF invalid (public).', 'fastcheckout'), ['status' => 403]);
         }

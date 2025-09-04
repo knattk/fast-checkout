@@ -34,6 +34,12 @@
             ''
         );
     }
+    function restCSRF() {
+        return (
+            (w.FC_Config && w.FC_Config.csrf) ||
+            ''
+        );
+    }
 
     function maskPhone(msisdn) {
         if (!msisdn) return '';
@@ -106,6 +112,7 @@
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     ...(restNonce() ? { 'X-WP-Nonce': restNonce() } : {}),
+                    ...(restCSRF() ? { 'x-fc-csrf': restCSRF() } : {}),
                 },
                 body: JSON.stringify(payload),
             });
@@ -156,6 +163,7 @@
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     ...(restNonce() ? { 'X-WP-Nonce': restNonce() } : {}),
+                    ...(restCSRF() ? { 'x-fc-csrf': restCSRF() } : {}),
                 },
                 body: JSON.stringify(payload),
             });
