@@ -10,6 +10,9 @@ use function FastCheckout\Utils\get_order_status;
 use function FastCheckout\Utils\get_paid_status;
 
 
+
+
+
 if (!defined('ABSPATH')) exit;
 
 /**
@@ -23,13 +26,17 @@ if (!defined('ABSPATH')) exit;
  */
 class Route_Order extends Abstract_Controller {
     private Order_Service $order;
-
+    
     public function __construct(Order_Service $order) {
         $this->order = $order;
     }
 
+
+    
+
     public function register_routes(): void {
         register_rest_route($this->namespace, '/order/create', [
+            'show_in_index' => false, 
             'methods'  => 'POST',
             'callback' => [$this, 'order_create'],
             'permission_callback' => [$this, 'permission_public'],
@@ -38,7 +45,7 @@ class Route_Order extends Abstract_Controller {
                 'payment_method' => [
                     'required' => true,
                     'sanitize_callback' => 'sanitize_text_field',
-                    'validate_callback' => fn($v) => in_array($v, ['cod','bacs'], true),
+                //     'validate_callback' => fn($v) => in_array($v, ['cod','bacs'], true),
                 ],
                 'customer' => ['required' => true],          // {first_name?, last_name?, full_name?, email, phone}
                 'shipping_address' => ['required' => true],  // {address_1, address_2?, city, state(TH name), postcode, country?}
@@ -49,8 +56,13 @@ class Route_Order extends Abstract_Controller {
     }
 
     public function order_create(WP_REST_Request $r) {
+
+
+
+
         // 1) ใช้ OTP token แบบ one-time (มาจาก Abstract_Controller)
         $otpToken = $r->get_param('otp_token');
+       // งับ fc_otptok_ ที่วางไข่ตอน verify OTP  (MD5)
         $subject  = $this->consume_otp_token($otpToken);
         if (!$subject) {
             return $this->json_error('OTP_TOKEN_INVALID', __('OTP token invalid or expired', 'fastcheckout'), 403);

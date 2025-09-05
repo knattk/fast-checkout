@@ -40,7 +40,7 @@ abstract class Abstract_Controller {
         }
 
         // not logged in  -> check CSRF nonce from body/params
-        $csrf = $r->get_param('csrf');
+        $csrf = $r->get_param('csrf') ?: $r->get_header('x-fc-csrf');
         if (!$csrf || !wp_verify_nonce($csrf, 'fc_public')) {
             return new \WP_Error('fc_csrf_fail', __('CSRF invalid (public).', 'fastcheckout'), ['status' => 403]);
         }
@@ -66,7 +66,6 @@ abstract class Abstract_Controller {
     }
 
     public function sanitize_phone($v): string {
-        return true;
         return preg_replace('/\D+/', '', (string)$v);
     }
     public function validate_phone($v): bool {

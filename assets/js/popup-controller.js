@@ -26,6 +26,17 @@ const FC_Popup = {
         this.el.classList.add('hidden');
         this.contentEl.innerHTML = '';
     },
+    save() {
+        // use html2canvas to capture the popup content and save as image
+        if (!this.contentEl) return;
+        html2canvas(this.contentEl).then((canvas) => {
+            // Create a link to download the image
+            const link = document.createElement('a');
+            link.download = 'order-confirmation.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    },
 };
 
 // initialize once DOM is ready

@@ -21,6 +21,7 @@ class Route_OTP extends Abstract_Controller {
 
     public function register_routes(): void {
         register_rest_route($this->namespace, '/otp/request', [
+            'show_in_index' => false, 
             'methods'  => 'POST',
             'callback' => [$this, 'otp_request'],
             'permission_callback' => [$this, 'permission_public'],
@@ -36,6 +37,7 @@ class Route_OTP extends Abstract_Controller {
         ]);
 
         register_rest_route($this->namespace, '/otp/verify', [
+            'show_in_index' => false, 
             'methods'  => 'POST',
             'callback' => [$this, 'otp_verify'],
             'permission_callback' => [$this, 'permission_public'],
@@ -56,6 +58,10 @@ class Route_OTP extends Abstract_Controller {
 
         // $res = $this->otp->requestOTP($msisdn, ['fp' => $finger]);
         $res = $this->otp->requestOTP($msisdn);
+
+        // แก้ 5/9 ทดสอบ
+        // return $res;
+
         if (empty($res['ok'])) {
             return $this->json_error('OTP_REQUEST_FAILED', __('ROUTE: OTP request failed', 'fastcheckout'), 502, [
                 'res' => $res,
@@ -73,10 +79,9 @@ class Route_OTP extends Abstract_Controller {
         }
 
         return $this->json_ok([
-            'status' => 'success',
-            'refno'   => $res['refno'] ?? '',
-            'token'   => $res['token'] ?? '',
-            'pin'     => $res['pin'] ?? null, // for test/dev only
+            'status'   => 'success',  // for API consistency
+            'refno'    => $res['refno'] ?? '',
+            'token'    => $res['token'] ?? '',
             'cooldown' => $res['cooldown'] ?? 60,
         ]);
     }
@@ -86,6 +91,10 @@ class Route_OTP extends Abstract_Controller {
         $pin = $r->get_param('pin');
 
         $res = $this->otp->verifyOTP($token, $pin);
+
+        // แก้ 5/9 ทดสอบ
+        // return $res;
+
         if (empty($res['ok'])) {
             return $this->json_error('401', __('รหัสยืนยัน OTP ไม่ถูกต้อง', 'fastcheckout'), 400, []);
         }
@@ -96,6 +105,7 @@ class Route_OTP extends Abstract_Controller {
         delete_transient('fc_otpreq_' . md5($token)); // เคลียร์ mapping ทิ้ง
 
         $subject   = $res['msisdn'] ?? ('ref:' . $ref);
+          // วางไข่ fc_otptok_ 5 นาที เอาไว้เช็กตอนสร้าง order
         $otp_token = $this->mint_otp_token($subject, $this->otp_token_ttl);
 
         return $this->json_ok([

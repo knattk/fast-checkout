@@ -5,11 +5,11 @@ use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
 use Elementor\Repeater;
 
-if ( ! function_exists( __NAMESPACE__ . '\\fc_decrypt' ) ) {
+if ( ! function_exists( __NAMESPACE__ . '\\Utils\\fc_decrypt' ) ) {
     require_once plugin_dir_path( __FILE__ ) . '/helpers.php';
 }
 
-use function FastCheckout\fc_decrypt;
+use function FastCheckout\Utils\fc_decrypt;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;

@@ -4,6 +4,7 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
+  font-family: inherit;
   /* hidden state */
 }
 .fc-popup.hidden {
@@ -20,13 +21,18 @@
 /* dialog box */
 .fc-popup-dialog {
   position: relative;
+  width: 100%;
   max-width: 400px;
-  margin: 10% auto;
+  height: 100%;
+  margin: auto;
   background: #fff;
-  border-radius: 8px;
-  padding: 20px;
   z-index: 10000;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+}
+.fc-popup-dialog .fc-popup-content {
+  width: 100%;
+  padding: 1rem;
 }
 
 /* close button */
@@ -155,6 +161,88 @@
 
 .fc-otp-timer {
   font-variant-numeric: tabular-nums;
+}
+
+.fc-otp-success svg {
+  color: #16a34a;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+}
+
+.order-success-content .success-header {
+  text-align: center;
+  width: 100%;
+}
+.order-success-content .success-header h3 {
+  font-weight: bold;
+  margin: 1rem;
+  color: #439d56;
+}
+.order-success-content .success-header p {
+  background: #f3fcf3;
+  color: #259425;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #cce1c9;
+  font-size: 0.95rem;
+}
+.order-success-content .order-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.order-success-content .order-summary div {
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  background: #f7f7f7;
+}
+.order-success-content .order-summary div div {
+  padding: 0;
+}
+.order-success-content .order-summary div h4 {
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 0.5rem;
+  margin: 0.5rem 0;
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+.order-success-content .order-summary div p {
+  font-size: 0.95rem;
+  margin: 0;
+  color: #636363;
+}
+.order-success-content .order-summary div p strong {
+  color: #4f4f4f;
+}
+.order-success-content .popup-actions {
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+}
+.order-success-content .popup-actions button {
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  flex: auto 1 1;
+  justify-content: space-between;
+  width: 100%;
+}
+.order-success-content .popup-actions button.btn-save-order {
+  background: #24a026;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.order-success-content .popup-actions button.btn-save-order:hover {
+  background: #1e8f20;
+}
+.order-success-content .popup-actions button.btn-new-order {
+  color: #818181;
 }
 
 /*# sourceMappingURL=popup.css.map */

@@ -303,11 +303,11 @@ class Checkout_Form_Widget extends Widget_Base {
             <input type="hidden" name="product_id">
 
             <label for="billing_first_name">ชื่อ - สกุล</label>
-            <input type="text" name="billing_first_name" id="billing_first_name" required placeholder="ชื่อ - สกุล" value="1">
+            <input type="text" name="billing_first_name" id="billing_first_name" required placeholder="ชื่อ - สกุล" value="ทดสอบ ฟาสต์เช็คเอาท์">
 
             <div id="billing_phone_group">
                 <label for="billing_phone">เบอร์โทร</label>
-                <input type="tel" name="billing_phone" id="billing_phone" required placeholder="เบอร์โทร" value="0999999999">
+                <input type="tel" name="billing_phone" id="billing_phone" required placeholder="เบอร์โทร" value="0617096222">
             </div>
 
             <div id="billing_email_group">
@@ -317,27 +317,27 @@ class Checkout_Form_Widget extends Widget_Base {
 
             <div id="billing_address_1_group">
                 <label for="billing_address_1">บ้านเลขที่ / ซอย / ถนน</label>
-                <input type="text" name="billing_address_1" id="billing_address_1" required placeholder="บ้านเลขที่ / ซอย / ถนน" value="1">
+                <input type="text" name="billing_address_1" id="billing_address_1" required placeholder="บ้านเลขที่ / ซอย / ถนน" value="111">
             </div>
 
             <div id="billing_postcode_group">
                 <label for="billing_postcode">รหัสไปรษณีย์</label>
-                <input type="text" name="billing_postcode" id="billing_postcode" required placeholder="รหัสไปรษณีย์" value="10200">
+                <input type="text" name="billing_postcode" id="billing_postcode" required placeholder="รหัสไปรษณีย์" >
             </div>
 
             <div id="billing_address_2_group">
                 <label for="billing_address_2">แขวง / ตำบล</label>
-                <input type="text" name="billing_address_2" id="billing_address_2" placeholder="แขวง/ตำบล" value="1">
+                <input type="text" name="billing_address_2" id="billing_address_2" placeholder="แขวง/ตำบล" >
             </div>
 
             <div id="billing_city_group">
                 <label for="billing_city">เขต / อำเภอ</label>
-                <input type="text" name="billing_city" id="billing_city" required placeholder="เขต/อำเภอ" value="1">
+                <input type="text" name="billing_city" id="billing_city" required placeholder="เขต/อำเภอ" >
             </div>
 
             <div id="billing_state_group">
                 <label for="billing_state">จังหวัด</label>
-                <input type="text" name="billing_state" id="billing_state" placeholder="จังหวัด" value="1">
+                <input type="text" name="billing_state" id="billing_state" placeholder="จังหวัด" >
             </div>
 
         </fieldset>

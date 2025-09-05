@@ -1,6 +1,9 @@
 <?php
 namespace FastCheckout\Services;
 
+use function FastCheckout\Utils\fc_decrypt;
+use function FastCheckout\Utils\get_state_name;
+
 if (!defined('ABSPATH')) exit;
 
 /**
@@ -20,16 +23,24 @@ class Order_Service {
     private string $cs;            // Consumer Secret
     private int    $timeout = 20;
     private ?string $hmacSecret;  
+    private array  $allowed_ips;   // IP ที่อนุญาตให้เรียก (ถ้าเซ็ต)
+    private string $site_url;      // เว็บนี้ (FastCheckout)
+    private string $store_url;     // เว็บปลายทาง (WooCommerce)
 
     private int $maxRetries = 2;   // retry 2 ครั้ง (รวม 3 ครั้ง)
 
     public function __construct() {
         $this->baseUrl    = rtrim((string) get_option('fc_order_base_url', ''), '/');
-        $this->ck         = (string) get_option('fc_order_ck', '');
-        $this->cs         = (string) get_option('fc_order_cs', '');
+        $this->ck         = (string) fc_decrypt(get_option('fast_checkout_consumer_key'));
+        $this->cs         = (string) fc_decrypt(get_option('fast_checkout_consumer_secret'));
         $this->timeout    = max(5, intval(get_option('fc_order_timeout', 20)));
         $secret           = trim((string) get_option('fc_order_hmac_secret', ''));
         $this->hmacSecret = $secret !== '' ? $secret : null;
+        // $this->allowed_ips = get_option('fast_checkout_allowed_ips', []);
+        $this->store_url = get_option('fast_checkout_store_url', '');
+        $this->site_url = $_SERVER['HTTP_HOST'] ?? get_site_url();
+
+
     }
 
     /**
@@ -38,11 +49,11 @@ class Order_Service {
      * @return array
      */
     public function createOrder(array $orderData): array {
-        if (!$this->baseUrl || !$this->ck || !$this->cs) {
+        if (!$this->store_url || !$this->ck || !$this->cs) {
             return ['ok' => false, 'error' => 'Order service not configured'];
         }
 
-        $url = $this->baseUrl . '/wp-json/wc/v3/orders';
+        $url = $this->store_url . '/wp-json/wc/v3/orders';
 
         // Idempotency key ป้องกันกดซ้ำ (เช่น เน็ตหลุด/กด refresh)
         $idempotencyKey = $this->buildIdempotencyKey($orderData);
@@ -156,7 +167,7 @@ class Order_Service {
     }
 
     private function buildSummary(array $wooOrder): array {
-        // ดึงข้อมูลสรุปที่ useful ให้ฝั่ง UI
+        // ดึงข้อมูลสรุปให้ฝั่ง UI
         return [
             'status'            => $wooOrder['status'] ?? '',
             'total'             => $wooOrder['total']  ?? '',
@@ -169,7 +180,7 @@ class Order_Service {
                 'address_1'  => $wooOrder['billing']['address_1'] ?? '',
                 'address_2'  => $wooOrder['billing']['address_2'] ?? '',
                 'city'       => $wooOrder['billing']['city'] ?? '',
-                'state'      => $wooOrder['billing']['state'] ?? '',
+                'state'      => get_state_name($wooOrder['billing']['state']) ?? $wooOrder['billing']['state'] ?? '',
                 'postcode'   => $wooOrder['billing']['postcode'] ?? '',
                 'country'    => $wooOrder['billing']['country'] ?? '',
                 'email'      => $wooOrder['billing']['email'] ?? '',

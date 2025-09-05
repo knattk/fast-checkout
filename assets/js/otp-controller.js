@@ -106,6 +106,9 @@
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     ...(restNonce() ? { 'X-WP-Nonce': restNonce() } : {}),
+                    ...(w.FC_Config?.csrf
+                        ? { 'x-fc-csrf': w.FC_Config.csrf }
+                        : {}),
                 },
                 body: JSON.stringify(payload),
             });
@@ -115,7 +118,7 @@
                 json = await resp.json();
             } catch {}
             const data = json?.data ?? json;
-            const status = data?.status;
+            const status = data?.status || data?.ok;
             if (
                 resp.ok &&
                 isSuccessStatus(status) &&
@@ -156,6 +159,9 @@
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     ...(restNonce() ? { 'X-WP-Nonce': restNonce() } : {}),
+                    ...(w.FC_Config?.csrf
+                        ? { 'x-fc-csrf': w.FC_Config.csrf }
+                        : {}),
                 },
                 body: JSON.stringify(payload),
             });
@@ -168,7 +174,13 @@
 
             const status = data?.status;
             if (resp.ok && isSuccessStatus(status)) {
-                return { ok: true, status, message: data?.message || '' };
+                console.log("'OTP verified response!'", data);
+                return {
+                    ok: true,
+                    status,
+                    message: data?.message || '',
+                    otp_token: data?.otp_token || '',
+                };
             }
 
             return {
@@ -253,7 +265,7 @@
                 });
                 digits[0].focus();
 
-                // timer (optional)
+                // timer
                 let remain = cooldown;
                 if (timerEl) timerEl.textContent = String(remain);
                 if (remain > 0) {
@@ -279,8 +291,12 @@
                 const doVerify = async () => {
                     const pin = readPin();
                     if (pin.length !== 4) {
-                        notificationEl.style.display = 'block';
-                        notificationEl.textContent = 'กรุณากรอกรหัส 4 หลัก';
+                        this._showNotification(
+                            notificationEl,
+                            'กรุณากรอกรหัส 4 หลัก',
+                            true
+                        );
+
                         return;
                     }
                     notificationEl.style.display = 'none';
@@ -294,16 +310,44 @@
                             'ยืนยัน OTP สำเร็จ',
                             false
                         );
+
+                        // hide button resend
+                        btnResend.style.display = 'none';
+
                         resolve({
                             token: opts.token,
                             pin,
                             status: vr.status,
+                            otp_token: vr.otp_token || '',
                             message: vr.message,
                         });
+
+                        // change content in popup to show success
+                        content.innerHTML = `
+                                <div class="fc-otp-success">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="54" height="54" fill="none"/><circle cx="128" cy="128" r="96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><polyline points="172 104 113.3 160 84 132" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                <h3>กำลังยืนยันการสั่งซื้อ...</h3>
+                                <p>กรุณารอสักครู่</p>
+                                </div>
+                            `;
+
+                        setTimeout(() => {
+                            resolve({
+                                token: opts.token,
+                                pin,
+                                status: vr.status,
+                                otp_token: vr.otp_token || '',
+                                message: vr.message,
+                            });
+                        }, 100);
+                        // setTimeout(() => this._cleanupPopup(), 13000);
                     } else {
-                        notificationEl.style.display = 'block';
-                        notificationEl.textContent =
-                            vr.message || 'รหัสไม่ถูกต้อง ลองใหม่';
+                        this._showNotification(
+                            notificationEl,
+                            'รหัสไม่ถูกต้อง กรุณาลองใหม่',
+                            true
+                        );
+
                         digits.forEach((i) => (i.value = ''));
                         digits[0].focus();
                     }
@@ -365,8 +409,13 @@
                         }
                     } else {
                         notificationEl.style.display = 'block';
-                        notificationEl.textContent =
-                            rq.message || 'ส่งใหม่ไม่สำเร็จ';
+                        notificationEl.textContent = rq.message || '';
+
+                        this._showNotification(
+                            notificationEl,
+                            'ส่งใหม่ไม่สำเร็จ',
+                            true
+                        );
                         btnResend.disabled = false;
                         btnResend.textContent = 'ส่งใหม่';
                     }
@@ -427,15 +476,14 @@
         },
 
         _showNotification(target, msg, isError = true) {
+            target.style.display = 'block';
             if (isError) {
-                target.style.display = 'block';
                 target.style.color = 'red';
                 target.textContent = msg || 'เกิดข้อผิดพลาด';
+            } else {
+                target.style.color = 'green';
+                target.textContent = msg || 'สำเร็จ!';
             }
-
-            target.style.display = 'block';
-            target.style.color = 'green';
-            target.textContent = msg || 'สำเร็จ!';
         },
         /**
          * High-level: request -> popup -> verify

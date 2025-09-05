@@ -17,23 +17,23 @@ class Settings_Page {
         ]);
 
         register_setting('fast_checkout_settings', 'fast_checkout_consumer_key', [
-            'sanitize_callback' => 'FastCheckout\\encrypted',
+            'sanitize_callback' => 'FastCheckout\\Utils\\fc_encrypt',
         ]);
 
         register_setting('fast_checkout_settings', 'fast_checkout_consumer_secret', [
-            'sanitize_callback' => 'FastCheckout\\encrypted',
+            'sanitize_callback' => 'FastCheckout\\Utils\\fc_encrypt',
         ]);
 
         register_setting('fast_checkout_settings', 'fast_checkout_otp_key', [
-            'sanitize_callback' => 'FastCheckout\\encrypted',
+            'sanitize_callback' => 'FastCheckout\\Utils\\fc_encrypt',
         ]);
 
         register_setting('fast_checkout_settings', 'fast_checkout_otp_secret', [
-            'sanitize_callback' => 'FastCheckout\\encrypted',
+            'sanitize_callback' => 'FastCheckout\\Utils\\fc_encrypt',
         ]);
 
         register_setting('fast_checkout_settings', 'fast_checkout_allowed_ips', [
-            'sanitize_callback' => 'FastCheckout\\sanitize_ip_list',
+            'sanitize_callback' => 'FastCheckout\\Utils\\sanitize_ip_list',
         ]);
 
         // register_setting('fast_checkout_settings', 'fast_checkout_illigible_user_fallback', [
@@ -78,14 +78,14 @@ register_setting('fast_checkout_settings', 'fast_checkout_hmac_secret', [
         add_settings_field('fast_checkout_allowed_ips', 'Allowed IPs (comma separated)', [$this, 'allowed_ips_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
         // add_settings_field('fast_checkout_illigible_user_fallback', 'Fallback HTML (for blocked IPs)', [$this, 'illigible_user_fallback_html'], 'fast_checkout_settings', 'fast_checkout_section');
     
-         add_settings_field('fast_checkout_otp_key', 'OTP Key', [$this, 'otp_key_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
+        add_settings_field('fast_checkout_otp_key', 'OTP Key', [$this, 'otp_key_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
         add_settings_field('fast_checkout_otp_secret', 'OTP Secret', [$this, 'otp_secret_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
         add_settings_field('fast_checkout_otp_provider', 'OTP Provider', [$this, 'otp_provider_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
-add_settings_field('fast_checkout_otp_api_base', 'OTP API Base (ThaiBulkSMS)', [$this, 'otp_api_base_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
-add_settings_field('fast_checkout_otp_proxy_url', 'OTP Proxy URL', [$this, 'otp_proxy_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
-add_settings_field('fast_checkout_otp_timeout', 'OTP Timeout (sec)', [$this, 'otp_timeout_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
-add_settings_field('fast_checkout_order_timeout', 'Order Timeout (sec)', [$this, 'order_timeout_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
-add_settings_field('fast_checkout_hmac_secret', 'HMAC Secret (optional)', [$this, 'hmac_secret_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
+        add_settings_field('fast_checkout_otp_api_base', 'OTP API Base (ThaiBulkSMS)', [$this, 'otp_api_base_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
+        add_settings_field('fast_checkout_otp_proxy_url', 'OTP Proxy URL', [$this, 'otp_proxy_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
+        add_settings_field('fast_checkout_otp_timeout', 'OTP Timeout (sec)', [$this, 'otp_timeout_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
+        add_settings_field('fast_checkout_order_timeout', 'Order Timeout (sec)', [$this, 'order_timeout_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
+        add_settings_field('fast_checkout_hmac_secret', 'HMAC Secret (optional)', [$this, 'hmac_secret_field_html'], 'fast_checkout_settings', 'fast_checkout_section');
 
     }
 
@@ -96,26 +96,26 @@ add_settings_field('fast_checkout_hmac_secret', 'HMAC Secret (optional)', [$this
 
     public function consumer_key_field_html() {
         $encrypted = get_option('fast_checkout_consumer_key');
-        $decrypted = \FastCheckout\maybe_decrypt($encrypted);
+        $decrypted = \FastCheckout\Utils\maybe_decrypt($encrypted);
         echo "<input type='password' name='fast_checkout_consumer_key' value='{$decrypted}' size='50' autocomplete='off' />";
     }
 
     public function consumer_secret_field_html() {
         $encrypted = get_option('fast_checkout_consumer_secret');
-        $decrypted = \FastCheckout\maybe_decrypt($encrypted);
+        $decrypted = \FastCheckout\Utils\maybe_decrypt($encrypted);
         echo "<input type='password' name='fast_checkout_consumer_secret' value='{$decrypted}' size='50' autocomplete='off' />";
     }
 
     public function otp_key_field_html() {
         $encrypted = get_option('fast_checkout_otp_key');
-        $decrypted = \FastCheckout\maybe_decrypt($encrypted);
-        echo "<input type='password' name='fast_checkout_otp_key' value='{$decrypted}' size='50' autocomplete='off' />";
+        $decrypted = \FastCheckout\Utils\maybe_decrypt($encrypted);
+        echo "<input type='text' name='fast_checkout_otp_key' value='{$decrypted}' size='50' autocomplete='off' />";
     }
 
     public function otp_secret_field_html() {
         $encrypted = get_option('fast_checkout_otp_secret');
-        $decrypted = \FastCheckout\maybe_decrypt($encrypted);
-        echo "<input type='password' name='fast_checkout_otp_secret' value='{$decrypted}' size='50' autocomplete='off' />";
+        $decrypted = \FastCheckout\Utils\maybe_decrypt($encrypted);
+        echo "<input type='text' name='fast_checkout_otp_secret' value='{$decrypted}' size='50' autocomplete='off' />";
     }
 
     public function allowed_ips_field_html() {
@@ -132,8 +132,8 @@ add_settings_field('fast_checkout_hmac_secret', 'HMAC Secret (optional)', [$this
 }
 
 public function otp_api_base_field_html() {
-    $v = esc_attr(get_option('fast_checkout_otp_api_base', 'https://api.thaibulksms.com'));
-    echo "<input type='url' name='fast_checkout_otp_api_base' value='{$v}' size='50' placeholder='https://api.thaibulksms.com' />";
+    $v = esc_attr(get_option('fast_checkout_otp_api_base', 'https://otp.thaibulksms.com'));
+    echo "<input type='url' name='fast_checkout_otp_api_base' value='{$v}' size='50' placeholder='https://otp.thaibulksms.com' />";
 }
 
 public function otp_proxy_field_html() {

@@ -1,5 +1,5 @@
 <?php
-namespace FastCheckout;
+namespace FastCheckout\Utils;
 
 /**
  * Existing helpers
