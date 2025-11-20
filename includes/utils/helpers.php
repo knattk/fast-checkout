@@ -61,8 +61,30 @@ function encrypt_value( $value ) {
 }
 
 function is_encrypted( $value ) {
+    if ( empty( $value ) ) {
+        return false;
+    }
+    
+    // Check if it's valid base64
     $decoded = base64_decode( $value, true );
-    return $decoded !== false && strlen( $decoded ) > 16;
+    if ( $decoded === false ) {
+        return false;
+    }
+    
+    // Check if length is consistent with AES-256-CBC encryption
+    // (must be multiple of 16 bytes due to block cipher)
+    if ( strlen( $decoded ) % 16 !== 0 || strlen( $decoded ) < 16 ) {
+        return false;
+    }
+    
+    // Try to decrypt and see if it produces valid UTF-8
+    $decrypted = fc_decrypt( $value );
+    if ( $decrypted === false || $decrypted === null ) {
+        return false;
+    }
+    
+    // Check if decrypted result is valid UTF-8
+    return mb_check_encoding( $decrypted, 'UTF-8' );
 }
 
 

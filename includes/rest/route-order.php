@@ -3,7 +3,6 @@ namespace FastCheckout\Rest;
 
 use WP_REST_Request;
 use FastCheckout\Services\Order_Service;
-
 use function FastCheckout\Utils\get_state_code;
 use function FastCheckout\Utils\get_payment_name;
 use function FastCheckout\Utils\get_order_status;
@@ -16,13 +15,11 @@ use function FastCheckout\Utils\get_paid_status;
 if (!defined('ABSPATH')) exit;
 
 /**
- * เส้นทาง Order:
  * - POST /fc/v1/order/create
  *
- * ข้อกำหนดสำคัญ:
- * - ต้องมี otp_token ที่เพิ่งผ่านการ verify (one-time & short-lived)
+ * - ต้องมี otp_token ที่ผ่าน verify (one-time & short-lived)
  * - ห้ามเชื่อยอด/ราคา/ส่วนลดจาก client -> ให้ Order_Service ตัดสิน/คำนวณจริงฝั่ง server
- * - เติม meta_data (order attribution) และข้อมูลภายใน
+ * - เติม meta_data (order attribution)
  */
 class Route_Order extends Abstract_Controller {
     private Order_Service $order;
@@ -113,13 +110,13 @@ class Route_Order extends Abstract_Controller {
         $order_status          = get_order_status($method);
         $set_paid              = (bool) get_paid_status($method);
 
-        // 7) line_items อย่างน้อย product_id + quantity (+ variation_id ได้)
+        // 7) line_items อย่างน้อยต้องมี product_id + quantity (+ variation_id ได้)
         $line_items = $this->normalize_items($items);
         if (empty($line_items)) {
             return $this->json_error('BAD_REQUEST', __('No line items', 'fastcheckout'), 422);
         }
 
-        // 8) meta_data + note (ย้ายแนวคิดจากไฟล์เก่า)
+        // 8) meta_data + note
         $meta = [
             ['key' => '_wc_order_attribution_source_type', 'value' => 'referral'],
             ['key' => '_wc_order_attribution_utm_source',   'value' => home_url()],
@@ -133,7 +130,7 @@ class Route_Order extends Abstract_Controller {
             parse_url(home_url(), PHP_URL_HOST)
         );
 
-        // 9) ประกอบ payload ส่งให้ WooCommerce (Order_Service จะจัดการยิง API + คำนวณ/ตรวจราคา)
+        // 9) รวม payload เป็นก้อนเดียว ส่งให้ WooCommerce
         $order_data = [
             'payment_method'       => $payment_method,
             'payment_method_title' => $payment_method_title,
@@ -146,7 +143,7 @@ class Route_Order extends Abstract_Controller {
             'line_items'           => $line_items,
         ];
 
-        // 10) เรียกบริการสร้างออเดอร์
+        // 10) เรียก createOrder สร้างออเดอร์
         $res = $this->order->createOrder($order_data);
 
         if (empty($res['ok'])) {
@@ -155,7 +152,7 @@ class Route_Order extends Abstract_Controller {
             ]);
         }
 
-        // 11) ส่งกลับสรุป
+        // 11) เอา Result สรุปกลับไปให้ client
         return $this->json_ok([
             'order_id' => (string)($res['order_id'] ?? ''),
             'summary'  => $res['summary'] ?? [

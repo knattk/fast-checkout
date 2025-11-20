@@ -4,9 +4,14 @@
   inset: 0;
   z-index: 9999;
   font-family: inherit;
+  display: flex;
   /* hidden state */
   &.hidden {
     display: none;
+  }
+  a, button {
+    font-family: inherit;
+    cursor: pointer;
   }
 }
 
@@ -28,6 +33,7 @@
   z-index: 10000;
   display: flex;
   align-items: center;
+  font-family: inherit;
   .fc-popup-content{
     width: 100%;
     padding: 1rem;
@@ -43,6 +49,14 @@
   border: none;
   font-size: 24px;
   cursor: pointer;
+}
+
+@media screen and (min-width: 480px) {
+  .fc-popup-dialog {
+    height: fit-content;
+    border-radius: 10px;
+  }
+  
 }
 
 /* ===== OTP Card ===== */
@@ -161,6 +175,25 @@
     cursor: not-allowed;
   }
 }
+.fc-otp-number {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #2563eb;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #e0e7ff;
+  }
+
+  &:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+}
 
 .fc-otp-timer {
   font-variant-numeric: tabular-nums;
@@ -184,7 +217,8 @@
     h3{
       font-weight: bold;
       margin: 1rem;
-      color:#439d56;    }
+      color: #439d56;
+    }
     p{
       background: #f3fcf3;
       color: #259425;
@@ -198,42 +232,43 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-
-    div {
-      padding: 0.5rem 1rem;
+    :is(.order-info,.order-address){
+      border: 1px solid #ebebeb;
+      background: #f9f9f9;
       border-radius: 10px;
-      background: #f7f7f7;
-      div {
-        padding:0;
-      }
-      h4 {
-        border-bottom: 1px solid #e8e8e8;
-        padding-bottom: 0.5rem;
-        margin: 0.5rem 0;
-        font-weight: bold;
-        font-size: 1.05rem;
-      }
-      p{
-        font-size: 0.95rem;
-        margin: 0;
-        color: #636363;
-        strong{
-          color: #4f4f4f;
+      padding: 0.5rem 1rem;
+        div {
+          padding:0;
         }
-      }
+        h4 {
+          border-bottom: 1px solid #e8e8e8;
+          padding-bottom: 0.5rem;
+          margin: 0.5rem 0!important;
+          font-weight: bold;
+          font-size: 1.05rem;
+        }
+        p{
+          font-size: 0.95rem;
+          margin: 0;
+          color: #636363;
+          strong{
+            color: #4f4f4f;
+          }
+        }
+      
     }
   }
   .popup-actions{
-    padding-top: 1rem;
+    padding-top: 1.5rem;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     gap: 0.5rem;
     button{
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: bold;
       border: none;
-      padding: 0.5rem 1rem;
+      padding: 0.65rem 1rem;
       border-radius: 6px;
       flex: auto 1 1;
       justify-content: space-between;

@@ -10,9 +10,9 @@ const FC_Popup = {
         this.el
             .querySelector('.fc-popup-close')
             .addEventListener('click', () => this.close());
-        this.el
-            .querySelector('.fc-popup-overlay')
-            .addEventListener('click', () => this.close());
+        // this.el
+        //     .querySelector('.fc-popup-overlay')
+        //     .addEventListener('click', () => this.close());
     },
 
     open(html) {

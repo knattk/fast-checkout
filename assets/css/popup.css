@@ -5,10 +5,15 @@
   inset: 0;
   z-index: 9999;
   font-family: inherit;
+  display: flex;
   /* hidden state */
 }
 .fc-popup.hidden {
   display: none;
+}
+.fc-popup a, .fc-popup button {
+  font-family: inherit;
+  cursor: pointer;
 }
 
 /* background overlay */
@@ -29,6 +34,7 @@
   z-index: 10000;
   display: flex;
   align-items: center;
+  font-family: inherit;
 }
 .fc-popup-dialog .fc-popup-content {
   width: 100%;
@@ -46,6 +52,12 @@
   cursor: pointer;
 }
 
+@media screen and (min-width: 480px) {
+  .fc-popup-dialog {
+    height: fit-content;
+    border-radius: 10px;
+  }
+}
 /* ===== OTP Card ===== */
 /* กล่อง OTP */
 .fc-otp-box {
@@ -159,6 +171,24 @@
   cursor: not-allowed;
 }
 
+.fc-otp-number {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #2563eb;
+  transition: background 0.15s ease;
+}
+.fc-otp-number:hover:not(:disabled) {
+  background: #e0e7ff;
+}
+.fc-otp-number:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
 .fc-otp-timer {
   font-variant-numeric: tabular-nums;
 }
@@ -192,41 +222,42 @@
   flex-direction: column;
   gap: 1rem;
 }
-.order-success-content .order-summary div {
-  padding: 0.5rem 1rem;
+.order-success-content .order-summary :is(.order-info, .order-address) {
+  border: 1px solid #ebebeb;
+  background: #f9f9f9;
   border-radius: 10px;
-  background: #f7f7f7;
+  padding: 0.5rem 1rem;
 }
-.order-success-content .order-summary div div {
+.order-success-content .order-summary :is(.order-info, .order-address) div {
   padding: 0;
 }
-.order-success-content .order-summary div h4 {
+.order-success-content .order-summary :is(.order-info, .order-address) h4 {
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 0.5rem;
-  margin: 0.5rem 0;
+  margin: 0.5rem 0 !important;
   font-weight: bold;
   font-size: 1.05rem;
 }
-.order-success-content .order-summary div p {
+.order-success-content .order-summary :is(.order-info, .order-address) p {
   font-size: 0.95rem;
   margin: 0;
   color: #636363;
 }
-.order-success-content .order-summary div p strong {
+.order-success-content .order-summary :is(.order-info, .order-address) p strong {
   color: #4f4f4f;
 }
 .order-success-content .popup-actions {
-  padding-top: 1rem;
+  padding-top: 1.5rem;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 0.5rem;
 }
 .order-success-content .popup-actions button {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.65rem 1rem;
   border-radius: 6px;
   flex: auto 1 1;
   justify-content: space-between;

@@ -35,6 +35,23 @@
         );
     }
 
+    // Fetch and cache user IP
+    async function fetchAndCacheUserIp() {
+        console.log('Fetching user IP address...');
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            if (data && data.ip) {
+                this.userIp = data.ip;
+                console.log('User IP cached:', this.userIp);
+            } else {
+                console.error('Could not retrieve IP address from ipify.org');
+            }
+        } catch (error) {
+            console.error('Error fetching IP address:', error);
+        }
+    }
+
     function maskPhone(msisdn) {
         if (!msisdn) return '';
         const s = String(msisdn).replace(/\D/g, '');
@@ -60,20 +77,44 @@
       </div>
 
       <p class="fc-otp-noti" style="display:none;">รหัสไม่ถูกต้อง กรุณาลองใหม่</p>
-
+    <button class="fc-otp-number">แก้เบอร์โทร</button>
      <button class="fc-otp-resend" ${showTimer ? 'disabled' : ''}>
-  ${
-      showTimer
-          ? `ส่งใหม่ใน <span class="fc-otp-timer">${Number(
-                cooldownSec
-            )}</span>s`
-          : 'ส่งใหม่'
-  }
-</button>
+     
+    ${
+        showTimer
+            ? `ส่งใหม่ใน <span class="fc-otp-timer">${Number(
+                  cooldownSec
+              )}</span>s`
+            : 'ส่งใหม่'
+    }
+    </button>
+    
 
     </div>
   `;
     }
+
+    // edit phone number button
+    // Add event listener to the document to handle clicks on the button
+    d.addEventListener('click', function (event) {
+        if (event.target.classList.contains('fc-otp-number')) {
+            // Handle edit phone number button click
+            console.log('Edit phone number button clicked');
+
+            // close the popup
+            if (
+                typeof FC_Popup === 'object' &&
+                typeof FC_Popup.close === 'function'
+            ) {
+                FC_Popup.close();
+            }
+            // focus phone number input field
+            const phoneInput = d.querySelector('input[name="billing_phone"]');
+            if (phoneInput) {
+                phoneInput.focus();
+            }
+        }
+    });
 
     const qDigits = (container) =>
         Array.from(container.querySelectorAll('.fc-otp-digit'));
@@ -83,10 +124,25 @@
         _timerIv: null,
         _lastFocusBackEl: null,
         _onClose: null,
+        _userIp: null,
+
+        get userIp() {
+            return this._userIp;
+        },
+        set userIp(v) {
+            this._userIp = v;
+            // call fetchAndCacheUserIp if v is null or empty
+            if (!v) fetchAndCacheUserIp.call(this);
+        },
 
         endpoints: {
             request: () => restRoot() + 'fc/v1/otp/request',
             verify: () => restRoot() + 'fc/v1/otp/verify',
+        },
+
+        init() {
+            // Fetch user IP on initialization
+            this.userIp = null;
         },
 
         // --- REST CALLS ---
@@ -228,6 +284,12 @@
                 const notificationEl = content.querySelector('.fc-otp-noti');
                 let timerEl = content.querySelector('.fc-otp-timer');
 
+                // Rate limiting variables
+                let failedAttempts = 0;
+                const maxAttempts = 5;
+                let editPhoneClicks = 0;
+                const maxEditClicks = 5;
+
                 // inputs
                 digits.forEach((inp, idx) => {
                     inp.addEventListener('input', () => {
@@ -296,7 +358,6 @@
                             'กรุณากรอกรหัส 4 หลัก',
                             true
                         );
-
                         return;
                     }
                     notificationEl.style.display = 'none';
@@ -340,13 +401,26 @@
                                 message: vr.message,
                             });
                         }, 100);
-                        // setTimeout(() => this._cleanupPopup(), 13000);
                     } else {
-                        this._showNotification(
-                            notificationEl,
-                            'รหัสไม่ถูกต้อง กรุณาลองใหม่',
-                            true
-                        );
+                        failedAttempts++;
+                        const remaining = maxAttempts - failedAttempts;
+                        if (failedAttempts >= maxAttempts) {
+                            this._showNotification(
+                                notificationEl,
+                                'คุณพยายามยืนยัน OTP เกินจำนวนครั้งที่กำหนด กรุณาลองใหม่ภายหลัง',
+                                true
+                            );
+                            // Disable inputs
+                            digits.forEach((inp) => (inp.disabled = true));
+                            btnResend.disabled = true;
+                            return;
+                        } else {
+                            this._showNotification(
+                                notificationEl,
+                                `รหัสไม่ถูกต้อง ลองใหม่ได้อีก ${remaining} ครั้ง`,
+                                true
+                            );
+                        }
 
                         digits.forEach((i) => (i.value = ''));
                         digits[0].focus();
@@ -420,6 +494,37 @@
                         btnResend.textContent = 'ส่งใหม่';
                     }
                 });
+
+                // Handle edit phone number button with limit
+                const editPhoneBtn = content.querySelector('.fc-otp-number');
+                if (editPhoneBtn) {
+                    editPhoneBtn.addEventListener('click', () => {
+                        editPhoneClicks++;
+                        if (editPhoneClicks >= maxEditClicks) {
+                            editPhoneBtn.disabled = true;
+                            this._showNotification(
+                                notificationEl,
+                                'คุณแก้ไขเบอร์โทรเกินจำนวนครั้งที่กำหนด',
+                                true
+                            );
+                            return;
+                        }
+                        // Existing logic
+                        console.log('Edit phone number button clicked');
+                        if (
+                            typeof FC_Popup === 'object' &&
+                            typeof FC_Popup.close === 'function'
+                        ) {
+                            FC_Popup.close();
+                        }
+                        const phoneInput = d.querySelector(
+                            'input[name="billing_phone"]'
+                        );
+                        if (phoneInput) {
+                            phoneInput.focus();
+                        }
+                    });
+                }
 
                 const onCancel = () => {
                     this._cleanupPopup();

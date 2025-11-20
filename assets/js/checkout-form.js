@@ -76,100 +76,113 @@
         if (submitting) return;
 
         try {
-            if (!ensureDeps()) {
-                return;
-            }
+            if (!ensureDeps()) return;
 
             const msisdn = getMsisdn();
-            if (!msisdn) {
-                alert('กรุณากรอกหมายเลขโทรศัพท์');
-                return;
-            }
-
-            // Validate phone number format
-            if (!msisdn.match(/^(0(?:2|3|4|5|7)\d{7}|0(?:6|8|9)\d{8})$/)) {
-                alert('กรุณากรอกหมายเลขโทรศัพท์ให้ถูกต้อง');
-                return;
-            }
+            if (!validatePhoneNumber(msisdn)) return;
 
             setSubmitting(true);
             console.log('Request OTP for', msisdn);
 
             const client_fingerprint = window.fc_fingerprint || undefined;
 
-            // ----------------------------------
-            //
-            // OTP VERIFY
-            //
-            // ----------------------------------
-            const result = await window.FastCheckout.OTPCtrl.requestAndPrompt(
-                msisdn,
-                {
-                    client_fingerprint,
-                }
-            );
-
-            if (!result || !result.status) {
-                alert('ไม่สามารถยืนยัน OTP ได้');
-                setSubmitting(false);
+            // OTP Verification
+            const otpResult = await requestOTP(msisdn, client_fingerprint);
+            if (!otpResult.success) {
+                handleError('ไม่สามารถยืนยัน OTP ได้');
                 return;
             }
 
-            // ----------------------------------
-            //
-            // CREATE ORDER
-            //
-            // ----------------------------------
-            const formData = new FormData(form);
-            console.log('Form data:', Array.from(formData.entries()));
-            const orderData = {
-                otp_token: result.otp_token,
-                payment_method: formData.get('checkout_payment') || 'cod',
-                customer: {
-                    first_name: (() => {
-                        const fullName =
-                            formData.get('billing_first_name') || '';
-                        return fullName.split(' ')[0] || '';
-                    })(),
-                    last_name: (() => {
-                        const fullName =
-                            formData.get('billing_first_name') || '';
-                        const parts = fullName.split(' ');
-                        return parts.slice(1).join(' ') || '';
-                    })(),
-                    full_name: formData.get('billing_first_name') || '',
-                    email: formData.get('billing_email'),
-                    phone: msisdn,
-                },
-                shipping_address: {
-                    address_1: formData.get('billing_address_1'),
-                    address_2: formData.get('billing_address_2') || '',
-                    city: formData.get('billing_city'),
-                    state: formData.get('billing_state'),
-                    postcode: formData.get('billing_postcode'),
-                    country: 'TH',
-                },
-                items: [
-                    {
-                        product_id: parseInt(formData.get('product_id')),
-                        quantity: 1,
-                        variation_id: formData.get('variation_id')
-                            ? parseInt(formData.get('variation_id'))
-                            : undefined,
-                    },
-                ],
-                policy_consents: {
-                    privacy: formData.get('policy_consent_privacy') === 'on',
-                    advertising: formData.get('policy_consent_ad') === 'on',
-                },
-                limit_timeout_hours: parseInt(
-                    formData.get('limit_timeout_hours') || '1'
-                ),
+            // Prepare and Submit Order
+            const orderData = prepareOrderData(form, msisdn, otpResult.token);
+            const orderResult = await submitOrder(orderData);
+
+            if (orderResult.success) {
+                showOrderSuccessPopup(orderResult.data);
+            } else {
+                handleError(orderResult.error || 'เกิดข้อผิดพลาดในการสั่งซื้อ');
+            }
+        } catch (err) {
+            console.error('Form submission error:', err);
+            handleError(getErrorMessage(err));
+        } finally {
+            setSubmitting(false);
+        }
+    });
+
+    // Helper Functions
+    const validatePhoneNumber = (msisdn) => {
+        if (!msisdn) {
+            alert('กรุณากรอกหมายเลขโทรศัพท์');
+            return false;
+        }
+        if (!msisdn.match(/^(0(?:2|3|4|5|7)\d{7}|0(?:6|8|9)\d{8})$/)) {
+            alert('กรุณากรอกหมายเลขโทรศัพท์ให้ถูกต้อง');
+            return false;
+        }
+        return true;
+    };
+
+    const requestOTP = async (msisdn, fingerprint) => {
+        try {
+            const result = await window.FastCheckout.OTPCtrl.requestAndPrompt(
+                msisdn,
+                { client_fingerprint: fingerprint }
+            );
+            return {
+                success: result && result.status,
+                token: result.otp_token,
             };
+        } catch (error) {
+            console.error('OTP request failed:', error);
+            return { success: false };
+        }
+    };
 
-            console.log('Submitting order data:', orderData);
+    const prepareOrderData = (form, msisdn, otpToken) => {
+        const formData = new FormData(form);
+        const fullName = formData.get('billing_first_name') || '';
+        const nameParts = fullName.split(' ');
 
-            // Submit order to backend
+        return {
+            otp_token: otpToken,
+            payment_method: formData.get('checkout_payment') || 'cod',
+            customer: {
+                first_name: nameParts[0] || '',
+                last_name: nameParts.slice(1).join(' ') || '',
+                full_name: fullName,
+                email: formData.get('billing_email'),
+                phone: msisdn,
+            },
+            shipping_address: {
+                address_1: formData.get('billing_address_1'),
+                address_2: formData.get('billing_address_2') || '',
+                city: formData.get('billing_city'),
+                state: formData.get('billing_state'),
+                postcode: formData.get('billing_postcode'),
+                country: 'TH',
+            },
+            items: [
+                {
+                    product_id: parseInt(formData.get('product_id')),
+                    quantity: 1,
+                    variation_id: formData.get('variation_id')
+                        ? parseInt(formData.get('variation_id'))
+                        : undefined,
+                },
+            ],
+            policy_consents: {
+                privacy: formData.get('policy_consent_privacy') === 'on',
+                advertising: formData.get('policy_consent_ad') === 'on',
+            },
+            limit_timeout_hours: parseInt(
+                formData.get('limit_timeout_hours') || '1'
+            ),
+        };
+    };
+
+    const submitOrder = async (orderData) => {
+        try {
             const response = await fetch(
                 FC_Config.rest_base + FC_Config.endpoints.order_create,
                 {
@@ -179,52 +192,46 @@
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
                         ...(restNonce() ? { 'X-WP-Nonce': restNonce() } : {}),
-                        ...(w.FC_Config?.csrf
-                            ? { 'x-fc-csrf': w.FC_Config.csrf }
+                        ...(window.FC_Config?.csrf
+                            ? { 'x-fc-csrf': window.FC_Config.csrf }
                             : {}),
                     },
                     body: JSON.stringify(orderData),
                 }
             );
 
-            if (!response.ok) {
+            if (!response.ok)
                 throw new Error(`HTTP error! status: ${response.status}`);
-            }
 
             const responseText = await response.text();
-            if (!responseText) {
-                throw new Error('Empty response from server');
-            }
+            if (!responseText) throw new Error('Empty response from server');
 
-            const orderResult = JSON.parse(responseText);
-            if (orderResult && !orderResult.error) {
-                // Show success popup with order summary
-                console.log('Order successful:', orderResult);
-                showOrderSuccessPopup(orderResult);
-            } else {
-                const errorMsg =
-                    orderResult?.error || 'เกิดข้อผิดพลาดในการสั่งซื้อ';
-                alert('ข้อผิดพลาด: ' + errorMsg);
-                setSubmitting(false);
-            }
-        } catch (err) {
-            console.error('Form submission error:', err);
-
-            let errorMessage = 'เกิดข้อผิดพลาดในการส่งข้อมูล';
-            if (err.message.includes('HTTP error')) {
-                errorMessage =
-                    'เซิร์ฟเวอร์ตอบกลับด้วยข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
-            } else if (err.message.includes('Empty response')) {
-                errorMessage =
-                    'ไม่ได้รับการตอบกลับจากเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง';
-            } else if (err.message.includes('Invalid JSON')) {
-                errorMessage = 'ข้อมูลที่ได้รับจากเซิร์ฟเวอร์ไม่ถูกต้อง';
-            }
-
-            alert('ข้อผิดพลาด: ' + errorMessage);
-            setSubmitting(false);
+            const result = JSON.parse(responseText);
+            return {
+                success: !result.error,
+                data: result,
+                error: result.error,
+            };
+        } catch (error) {
+            console.error('Order submission failed:', error);
+            throw error;
         }
-    });
+    };
+
+    const handleError = (message) => {
+        console.log('ข้อผิดพลาด: ' + message);
+        setSubmitting(false);
+    };
+
+    const getErrorMessage = (err) => {
+        if (err.message.includes('HTTP error'))
+            return 'เซิร์ฟเวอร์ตอบกลับด้วยข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+        if (err.message.includes('Empty response'))
+            return 'ไม่ได้รับการตอบกลับจากเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง';
+        if (err.message.includes('Invalid JSON'))
+            return 'ข้อมูลที่ได้รับจากเซิร์ฟเวอร์ไม่ถูกต้อง';
+        return 'เกิดข้อผิดพลาดในการส่งข้อมูล';
+    };
 
     // Function to show order success popup
     const showOrderSuccessPopup = (orderData) => {

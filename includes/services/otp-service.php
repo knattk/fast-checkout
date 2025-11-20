@@ -149,56 +149,6 @@ class OTP_Service {
     *   - verify:  { token: "<token-from-request>", pin: "<user-entered-code>" }
     */
 
-    // private function requestViaThaiBulkSMS(string $msisdn, array $meta): array {
-    //     // allow overriding base via option, default kept in constructor
-    //     $url = rtrim($this->apiBase ?: 'https://otp.thaibulksms.com', '/') . '/v2/otp/request';
-
-    //     // Build request body. You can map/whitelist meta -> OTP options here if needed.
-    //     $body = [
-    //         'key' => $this->apiKey,
-    //         'secret' => $this->apiSecret,
-    //         'msisdn' => $msisdn,
-    //     ];
-
-    //     // Remove nulls
-    //     $body = array_filter($body, static fn($v) => $v !== null);
-
-    //     $args = [
-    //         'timeout' => $this->timeout,
-    //         'headers' => [
-    //             'Content-Type'  => 'application/json',
-    //             // HTTP Basic with key:secret
-    //             'Authorization' => 'Basic ' . base64_encode($this->apiKey . ':' . $this->apiSecret),
-    //         ],
-    //         'body'    => wp_json_encode($body),
-    //     ];
-
-    //     $res = wp_remote_post($url, $args);
-    //     if (is_wp_error($res)) {
-    //         return ['ok' => false, 'error' => $res->get_error_message()];
-    //     }
-
-    //     $code = wp_remote_retrieve_response_code($res);
-    //     $raw  = wp_remote_retrieve_body($res);
-    //     $json = json_decode($raw, true) ?: [];
-
-    //     // v2 usually returns a token; keep refno as fallback for older variants
-    //     $token = $json['token'] ?? null;
-    //     $refno = $json['refno']  ?? null;
-
-    //     if ($code >= 200 && $code < 300 && ($token || $refno)) {
-    //         return [
-    //             'ok'       => true,
-    //             'token'    => $token,
-    //             'refno'    => $refno,
-    //             'cooldown' => (int) ($json['cooldown'] ?? 60),
-    //         ];
-    //     }
-
-    //     $err = $json['message'] ?? $json['error'] ?? "SERVER: OTP request failed ({$code})";
-    //     return ['ok' => false, 'error' => $err];
-    // }
-
     private function requestViaThaiBulkSMS(string $msisdn, array $meta): array {
         // Endpoint for ThaiBulkSMS (different from proxy)
         $url = rtrim($this->apiBase ?: 'https://otp.thaibulksms.com', '/') . '/v2/otp/request';
@@ -251,43 +201,5 @@ class OTP_Service {
         $res = wp_remote_post($url, $args);
         return $this->normalizeProxyResponse($res, 'verify');
     }
-
-    // private function verifyViaThaiBulkSMS(string $token, string $pin): array {
-    //     $url = rtrim($this->apiBase ?: 'https://otp.thaibulksms.com', '/') . '/v2/otp/verify';
-
-    //     $body = [
-    //         'key' => $this->apiKey,
-    //         'secret' => $this->apiSecret,
-    //         'token' => $token,   // v2 uses "token"
-    //         'pin'   => $pin,    // v2 uses "pin"
-    //     ];
-
-    //     $args = [
-    //         'timeout' => $this->timeout,
-    //         'headers' => [
-    //             'Content-Type'  => 'application/json',
-    //             'Authorization' => 'Basic ' . base64_encode($this->apiKey . ':' . $this->apiSecret),
-    //         ],
-    //         'body'    => wp_json_encode($body),
-    //     ];
-
-    //     $res = wp_remote_post($url, $args);
-    //     if (is_wp_error($res)) {
-    //         return ['ok' => false, 'error' => $res->get_error_message()];
-    //     }
-
-    //     $codeHttp = wp_remote_retrieve_response_code($res);
-    //     $raw      = wp_remote_retrieve_body($res);
-    //     $json     = json_decode($raw, true) ?: [];
-
-    //     // Typical success: status/message flags; keep permissive check
-    //     $okFlag = !empty($json['ok']) || (isset($json['status']) && $json['status'] === 'success');
-    //     if ($codeHttp >= 200 && $codeHttp < 300 && $okFlag) {
-    //         return ['ok' => true, 'message' => $json['message'] ?? null];
-    //     }
-
-    //     $err = $json['message'] ?? $json['error'] ?? "OTP verify failed ({$codeHttp})";
-    //     return ['ok' => false, 'error' => $err];
-    // }
 
 }
